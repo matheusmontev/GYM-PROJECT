@@ -31,17 +31,17 @@ const TRAINER_EMAIL_REAL = "rafael@trainer.com";
 window.fazerLogin = async function (usuario, senha) {
     console.log("Tentando logar com:", usuario, senha);
 
-    // 1. Verifica Admin (André)
+    // 1. Verifica Admin (Rafael)
     if (usuario === TRAINER_LOGIN && senha === TRAINER_PASS) {
         try {
             await auth.signInWithEmailAndPassword(TRAINER_EMAIL_REAL, "senha123padrao");
-            window.location.href = "dashboard.html";
+            window.location.href = "telas/dashboard.html";
             return;
         } catch (e) {
             console.log("Conta admin não achada, criando...", e);
             try {
                 await auth.createUserWithEmailAndPassword(TRAINER_EMAIL_REAL, "senha123padrao");
-                window.location.href = "dashboard.html";
+                window.location.href = "telas/dashboard.html";
             } catch (err2) {
                 if (err2.code === 'auth/configuration-not-found' || err2.code === 'auth/operation-not-allowed') {
                     alert("ERRO DE CONFIGURAÇÃO NO FIREBASE:\n\nVocê precisa ativar o 'Email/Senha' no painel do Firebase.\n\n1. Vá em Authentication\n2. Sign-in method\n3. Ative Email/Password");
@@ -67,7 +67,7 @@ window.fazerLogin = async function (usuario, senha) {
             // Salva sessão manual
             sessionStorage.setItem("studentId", doc.id);
             sessionStorage.setItem("studentName", data.name);
-            window.location.href = "student.html";
+            window.location.href = "telas/student.html";
         } else {
             alert("Usuário ou senha incorretos.");
         }
@@ -83,7 +83,7 @@ window.fazerLogin = async function (usuario, senha) {
 window.fazerLogout = function () {
     auth.signOut();
     sessionStorage.clear();
-    window.location.href = "index.html";
+    window.location.href = "../index.html";
 };
 
 /**
@@ -93,7 +93,7 @@ window.verificarAuthDashboard = function () {
     auth.onAuthStateChanged(user => {
         if (!user) {
             // Se não estiver logado no Firebase, expulsa
-            window.location.href = "index.html";
+            window.location.href = "../index.html";
         }
     });
 };
@@ -103,6 +103,6 @@ window.verificarAuthDashboard = function () {
  */
 window.verificarAuthAluno = function () {
     if (!sessionStorage.getItem("studentId")) {
-        window.location.href = "index.html";
+        window.location.href = "../index.html";
     }
 };
