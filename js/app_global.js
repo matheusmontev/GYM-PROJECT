@@ -21,9 +21,9 @@ const db = firebase.firestore();
 // LÓGICA DE AUTENTICAÇÃO E UTILITÁRIOS
 // ============================================================
 
-const TRAINER_LOGIN = "André";
+const TRAINER_LOGIN = "rafael";
 const TRAINER_PASS = "123";
-const TRAINER_EMAIL_REAL = "andre@trainer.com";
+const TRAINER_EMAIL_REAL = "rafael@trainer.com";
 
 /**
  * Função Global de Login
