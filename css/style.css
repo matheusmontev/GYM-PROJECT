@@ -25,11 +25,49 @@
     --border: #e2e8f0;
     --danger: #e53e3e;
     --success: #48bb78;
+
+    /* Caminho para a imagem de fundo - você pode trocar o nome aqui */
+    --bg-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F3.bp.blogspot.com%2F-bN7hRKtZMyM%2FVtXnlxmmBdI%2FAAAAAAAA_qM%2F7zXa4edwCag%2Fs1600%2FDSC_1662.JPG&f=1&nofb=1&ipt=1dbc39c9dc486ba5cc4cc0e59300c1972af898b2d5929469626e74adc26edbe8');
+}
+
+/* Background Utility */
+.bg-gradient {
+    min-height: 100vh;
+    background: linear-gradient(135deg, rgba(245, 247, 250, 0.9) 0%, rgba(195, 207, 226, 0.9) 100%), var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+.login-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Horizontal Carousel */
+.days-carousel {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 5px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.days-carousel::-webkit-scrollbar {
+    display: none;
 }
 
 body {
     min-height: 100vh;
-    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    background: linear-gradient(135deg, rgba(245, 247, 250, 0.9) 0%, rgba(195, 207, 226, 0.9) 100%), var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--text-dark);
     font-size: 16px;
     /* Tamanho base legível para mobile */
@@ -240,16 +278,27 @@ th {
 }
 
 .day-tab {
-    flex: 1;
-    /* Distribui espaço */
+    flex: 0 0 auto;
+    /* Prevent shrinking */
+    width: 110px;
+    /* Fixed size */
     text-align: center;
     padding: 0.8rem 0.5rem;
     font-size: 0.9rem;
-    min-width: auto;
-    /* Permite encolher */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    border: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    background: #eee;
+    transition: all 0.2s;
+}
+
+.day-tab.active {
+    background: var(--white);
+    border-bottom: 2px solid var(--primary);
+    font-weight: bold;
 }
 
 /* Exercício Row */
