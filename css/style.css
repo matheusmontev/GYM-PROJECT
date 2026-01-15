@@ -1,36 +1,59 @@
 /* 
- * DESIGN (CSS)
- * Estilo moderno, clean e minimalista com foco em Mobile-First.
+ * DESIGN SYSTEM (CSS)
+ * Estilo moderno, clean e minimalista com foco em dispositivos móveis (Mobile-First).
  */
 
-/* Reset básico */
+/* 1. Reset e Configurações Básicas */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+    /* Remove o realce azul ao tocar em botões/links no mobile */
     -webkit-tap-highlight-color: transparent;
-    /* Remove highlight no toque em mobile */
 }
 
-/* Variáveis de Cores */
+/* 2. Variáveis de Design (Tokens) */
 :root {
+    /* Paleta de Cores Principais */
     --primary: #4299e1;
+    /* Azul principal */
     --primary-dark: #3182ce;
+    /* Azul para hover/active */
     --bg-gradient-start: #f5f7fa;
     --bg-gradient-end: #c3cfe2;
     --text-dark: #2d3748;
+    /* Cor de texto principal (cinza escuro) */
     --text-muted: #718096;
+    /* Cor para textos secundários */
     --white: #ffffff;
     --border: #e2e8f0;
+    /* Cor padrão de bordas */
     --danger: #e53e3e;
+    /* Cor para botões de excluir/parar */
     --success: #48bb78;
+    /* Cor para ações de sucesso */
 
-    /* Caminho para a imagem de fundo - você pode trocar o nome aqui */
+    /* Imagem de Fundo (Pode ser alterada aqui) */
     --bg-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F3.bp.blogspot.com%2F-bN7hRKtZMyM%2FVtXnlxmmBdI%2FAAAAAAAA_qM%2F7zXa4edwCag%2Fs1600%2FDSC_1662.JPG&f=1&nofb=1&ipt=1dbc39c9dc486ba5cc4cc0e59300c1972af898b2d5929469626e74adc26edbe8');
 }
 
-/* Background Utility */
+/* 3. Configurações Globais do Body */
+body {
+    min-height: 100vh;
+    /* Gradiente suave sobreposto à imagem de fundo */
+    background: linear-gradient(135deg, rgba(245, 247, 250, 0.9) 0%, rgba(195, 207, 226, 0.9) 100%), var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    color: var(--text-dark);
+    font-size: 16px;
+    /* Garante legibilidade mínima sem zoom */
+    line-height: 1.5;
+}
+
+/* Utilitário para fundos com gradiente total */
 .bg-gradient {
     min-height: 100vh;
     background: linear-gradient(135deg, rgba(245, 247, 250, 0.9) 0%, rgba(195, 207, 226, 0.9) 100%), var(--bg-image);
@@ -40,6 +63,7 @@
     background-repeat: no-repeat;
 }
 
+/* Centralização exclusiva para a tela de login */
 .login-body {
     display: flex;
     align-items: center;
@@ -47,64 +71,53 @@
     min-height: 100vh;
 }
 
-/* Horizontal Carousel */
+/* 4. Componentes: Carrossel de Dias (Navegação) */
 .days-carousel {
     display: flex;
     overflow-x: auto;
     gap: 0.5rem;
     padding-bottom: 5px;
     -webkit-overflow-scrolling: touch;
+    /* Scroll suave em iOS */
     scrollbar-width: none;
+    /* Oculta scrollbar em Firefox */
 }
 
+/* Oculta scrollbar em Chrome/Safari */
 .days-carousel::-webkit-scrollbar {
     display: none;
 }
 
-body {
-    min-height: 100vh;
-    background: linear-gradient(135deg, rgba(245, 247, 250, 0.9) 0%, rgba(195, 207, 226, 0.9) 100%), var(--bg-image);
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: var(--text-dark);
-    font-size: 16px;
-    /* Tamanho base legível para mobile */
-    line-height: 1.5;
-}
-
-/* Layout Utilitários */
+/* 5. Layout e Containers */
 .container {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
-    /* Padding menor em mobile */
 }
 
+/* Responsividade para container em telas maiores */
 @media (min-width: 768px) {
     .container {
         padding: 2rem;
     }
 }
 
-/* Cards */
+/* 6. Componentes: Cards */
 .card {
     background: var(--white);
     padding: 1.5rem;
     border-radius: 16px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    /* Sombra mais suave */
+    /* Sombra suave 'glassmorphism' */
     margin-bottom: 1.5rem;
     overflow: hidden;
-    /* Garante que nada vaze */
 }
 
-/* Botões - Touch Friendly */
+/* 7. Componentes: Botões (Touch Friendly) */
 .btn {
     padding: 0.8rem 1.5rem;
-    /* Área de toque maior */
+    /* Área de toque otimizada para dedos */
     border: none;
     border-radius: 8px;
     font-weight: 600;
@@ -127,6 +140,7 @@ body {
 .btn-primary:active {
     background-color: var(--primary-dark);
     transform: translateY(1px);
+    /* Feedback visual de clique */
 }
 
 .btn-danger {
@@ -139,7 +153,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* Inputs - Mobile Friendly */
+/* 8. Componentes: Entradas (Inputs) */
 input,
 select,
 textarea {
@@ -148,23 +162,22 @@ textarea {
     border: 1px solid var(--border);
     border-radius: 8px;
     font-size: 16px;
-    /* Evita zoom automático no iPhone */
+    /* Evita o zoom automático do navegador em iOS ao focar */
     background: var(--white);
     margin-bottom: 0.5rem;
-    /* Espaço padrão entre inputs */
 }
 
 input:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgb(0, 140, 255);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
     outline: none;
 }
 
-/* Cabeçalho do App */
+/* 9. Layout: Cabeçalho da Aplicação */
 .app-header {
     display: flex;
     flex-direction: column;
-    /* Stack em mobile */
+    /* Coluna no mobile */
     gap: 1rem;
     align-items: center;
     justify-content: space-between;
@@ -176,6 +189,7 @@ input:focus {
     text-align: center;
 }
 
+/* Altera cabeçalho para linha em telas maiores */
 @media (min-width: 600px) {
     .app-header {
         flex-direction: row;
@@ -190,11 +204,10 @@ input:focus {
     font-weight: 700;
 }
 
-/* Tabelas Responsivas */
+/* 10. Layout: Tabelas Responsivas */
 .table-container {
     width: 100%;
     overflow-x: auto;
-    /* Scroll horizontal se estourar */
     -webkit-overflow-scrolling: touch;
 }
 
@@ -202,7 +215,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     min-width: 600px;
-    /* Garante largura mínima para não espremer */
+    /* Impede esmagamento excessivo das colunas */
 }
 
 th,
@@ -222,66 +235,34 @@ th {
     letter-spacing: 0.05em;
 }
 
-/* Grids e Layouts Específicos */
-.grid-inputs {
+/* 11. Componentes: Editor de Treinos (Grid) */
+.exercise-row {
+    background: #f7fafc;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.exercise-inputs {
     display: grid;
     grid-template-columns: 1fr;
+    /* Coluna única no mobile */
     gap: 0.5rem;
 }
 
+/* Grid de múltiplas colunas para o editor em desktop */
 @media (min-width: 600px) {
-    .grid-inputs {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    .exercise-inputs {
+        grid-template-columns: 3fr 1fr 1fr 1.5fr;
+        /* Nome, Sets, Reps e Descanso */
     }
 }
 
-/* Dashboard: Adicionar Aluno */
-#novoNome,
-#novoLogin,
-#novaSenha,
-#btnAdicionarAluno {
-    width: 100%;
-}
-
-.add-student-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-@media (min-width: 900px) {
-    .add-student-form {
-        flex-direction: row;
-        align-items: center;
-    }
-
-    .add-student-form input {
-        margin-bottom: 0;
-    }
-
-    .add-student-form button {
-        white-space: nowrap;
-        width: auto;
-    }
-}
-
-/* Modal e Abas */
-#modalTreino {
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 0 !important;
-    z-index: 9999 !important;
-    padding: 1rem !important;
-    /* Mais espaço interno */
-}
-
+/* Abas de Dias */
 .day-tab {
     flex: 0 0 auto;
-    /* Prevent shrinking */
     width: 110px;
-    /* Fixed size */
     text-align: center;
     padding: 0.8rem 0.5rem;
     font-size: 0.9rem;
@@ -299,26 +280,4 @@ th {
     background: var(--white);
     border-bottom: 2px solid var(--primary);
     font-weight: bold;
-}
-
-/* Exercício Row */
-.exercise-row {
-    background: #f7fafc;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-}
-
-.exercise-inputs {
-    display: grid;
-    grid-template-columns: 1fr;
-    /* 1 coluna em mobile */
-    gap: 0.5rem;
-}
-
-@media (min-width: 600px) {
-    .exercise-inputs {
-        grid-template-columns: 3fr 1fr 1fr auto;
-    }
 }

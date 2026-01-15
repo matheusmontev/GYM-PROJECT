@@ -1,10 +1,13 @@
-// Importa as funções que precisamos do SDK do Firebase
+/**
+ * Configuração do Firebase SDK Modular (v9+)
+ * Este arquivo centraliza a inicialização do app e dos serviços de Auth e Firestore.
+ */
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-// TODO: Substitua os valores abaixo pela sua "Chave" do Firebase
-// Para achar: Configurações do Projeto (Engrenagem) -> Role até o fim -> Seus Aplicativos -> Config
+// Credenciais do projeto Firebase (obtidas no console do Firebase)
 const firebaseConfig = {
   apiKey: "AIzaSyB-EUEKc_7zzszou9qP83ic7DZV-1CBrZw",
   authDomain: "saas-treino-andre.firebaseapp.com",
@@ -15,12 +18,12 @@ const firebaseConfig = {
   measurementId: "G-CKG3HGYKL2"
 };
 
-// Inicializa o Firebase
+// Inicializa a instância principal do Firebase
 const app = initializeApp(firebaseConfig);
 
-// Inicializa a Autenticação e o Banco de Dados
+// Inicializa e expõe os serviços específicos
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Exporta para usar em outros arquivos
+// Exporta as instâncias para serem usadas por outros módulos/arquivos
 export { auth, db };

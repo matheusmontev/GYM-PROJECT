@@ -4,13 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SaaS</title>
+    <title>Login - SaaS Treino</title>
+    <!-- Importação do CSS Global -->
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Scripts do Firebase SDK (Versão Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Lógica Global de Autenticação -->
     <script src="js/app_global.js"></script>
+
     <style>
+        /* Estilos específicos para a tela de login */
         .login-card {
             width: 100%;
             max-width: 400px;
@@ -43,9 +50,11 @@
 
 <body class="bg-gradient login-body">
     <div class="login-card">
+        <!-- Logo do Sistema -->
         <img src="imagem/foto-logo.jpeg" alt="Logo do SaaS" class="logo-img">
         <h2>Acesse sua conta</h2>
 
+        <!-- Formulário de Login -->
         <form id="loginForm">
             <div class="input-group">
                 <label for="usuario">Usuário</label>
@@ -55,29 +64,39 @@
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" placeholder="Digite sua senha" required>
             </div>
+            <!-- Botão de Envio coordenado com o style.css -->
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Entrar</button>
         </form>
 
+        <!-- Mensagem de erro oculta por padrão -->
         <div id="msgErro" class="error-message">Usuário ou senha incorretos.</div>
     </div>
 
     <script>
+        // Captura elementos do DOM
         const loginForm = document.getElementById('loginForm');
         const msgErro = document.getElementById('msgErro');
 
+        // Escuta o evento de submissão do formulário
         loginForm.addEventListener('submit', function (event) {
-            event.preventDefault();
+            event.preventDefault(); // Impede o recarregamento da página
             msgErro.classList.remove('visible');
 
+            // Coleta os valores dos campos
             const usuarioInput = document.getElementById('usuario').value.trim();
             const senhaInput = document.getElementById('senha').value.trim();
 
-            // Chama a função global definida no app_global.js
+            /**
+             * Chama a função global definida no app_global.js.
+             * Esta função decide se é o Personal ou o Aluno que está logando.
+             */
             window.fazerLogin(usuarioInput, senhaInput);
         });
 
+        // Remove a mensagem de erro quando o usuário começa a digitar novamente
         document.getElementById('usuario').addEventListener('input', () => msgErro.classList.remove('visible'));
         document.getElementById('senha').addEventListener('input', () => msgErro.classList.remove('visible'));
     </script>
 </body>
+
 </html>

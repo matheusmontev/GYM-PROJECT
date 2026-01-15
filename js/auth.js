@@ -2,36 +2,37 @@ import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-// Credenciais "Hardcoded" do Admin como solicitado
+// Credenciais fixas do Treinador (Rafael)
 const TRAINER_LOGIN = "rafael";
 const TRAINER_PASS = "123";
-// Email interno para o Firebase Auth (O usuário não precisa digitar isso)
+
+// Email interno para o Firebase Auth associado ao perfil administrativo
 const TRAINER_EMAIL_REAL = "rafael@trainer.com";
 
+/**
+ * Função de Login Modular
+ * Utilizada para autenticação via ES Modules (v9 SDK).
+ * @param {string} usuario - Login informado pelo usuário
+ * @param {string} senha - Senha informada pelo usuário
+ */
 export async function login(usuario, senha) {
-    // 1. Verifica se é o Treinador Rafael
+    // 1. Verifica se as credenciais batem com o perfil do Treinador
     if (usuario === TRAINER_LOGIN && senha === TRAINER_PASS) {
         try {
-            // Tenta logar com o email real do admin.
-            // Nota: Se a conta não existir, precisaria criar. 
-            // Para simplificar, vou assumir erro na primeira vez e alertar.
-            await signInWithEmailAndPassword(auth, TRAINER_EMAIL_REAL, "senha123padrao"); // Senha interna forte
-            // Se der certo:
-            window.location.href = "telas/dashboard.html";
+            // Tenta realizar o login administrativo real no Firebase Auth
+            await signInWithEmailAndPassword(auth, TRAINER_EMAIL_REAL, "senha123padrao");
+            window.location.href = "telas/dashboard.html"; // Redireciona se for treinador
             return;
         } catch (e) {
             console.log("Tentando criar conta de Admin automática...", e);
-            // Se o login falhar (ex: usuario nao existe), TENTAMOS CRIAR A CONTA AUTOMATICAMENTE
-            // Isso resolve o problema do primeiro acesso.
+            // Tenta criar a conta automaticamente caso seja o primeiro acesso do sistema
             try {
                 const { createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js");
                 await createUserWithEmailAndPassword(auth, TRAINER_EMAIL_REAL, "senha123padrao");
 
-                // Se criou com sucesso, redireciona
                 window.location.href = "telas/dashboard.html";
                 return;
             } catch (createError) {
-                // Se der erro ao criar (ex: senha fraca, ou erro de rede)
                 console.error("Erro fatal ao criar Admin:", createError);
                 alert("Erro ao entrar. Verifique o console (F12) para detalhes.");
                 throw createError;
@@ -39,8 +40,7 @@ export async function login(usuario, senha) {
         }
     }
 
-    // 2. Se não é André, verifica se é ALUNO no Firestore (Simulated Auth)
-    // Buscamos na coleção 'students' se existe usuario/senha batendo
+    // 2. Caso não seja o treinador, busca o aluno na coleção 'students' do Firestore
     try {
         const q = query(collection(db, "students"),
             where("login", "==", usuario),
@@ -49,16 +49,15 @@ export async function login(usuario, senha) {
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-            // Aluno encontrado!
+            // Se encontrou o documento do aluno
             const alunoDoc = querySnapshot.docs[0];
             const alunoData = alunoDoc.data();
 
-            // Salvamos o ID do aluno na Sessão (SessionStorage) para usar na página do aluno
-            // Não usamos Firebase Auth para o aluno para simplificar o cadastro pelo professor
+            // Salva dados básicos da sessão no SessionStorage
             sessionStorage.setItem("studentId", alunoDoc.id);
             sessionStorage.setItem("studentName", alunoData.name);
 
-            window.location.href = "telas/student.html";
+            window.location.href = "telas/student.html"; // Redireciona para área do aluno
             return;
         } else {
             throw new Error("Usuário ou senha inválidos.");
@@ -70,6 +69,10 @@ export async function login(usuario, senha) {
     }
 }
 
+/**
+ * Função de Logout Modular
+ * Encerra a sessão no Firebase e limpa dados locais.
+ */
 export async function logout() {
     await signOut(auth);
     sessionStorage.clear();
@@ -77,18 +80,17 @@ export async function logout() {
 }
 
 /**
- * Verifica permissão na página
- * @param {string} tipo 'trainer' ou 'student'
+ * Verifica permissão na página em tempo de execução
+ * @param {string} tipo - 'trainer' para dashboard ou 'student' para área do aluno
  */
 export function checkAuth(tipo) {
+    // Para o treinador, o Firebase gerencia o estado via currentUser ou observer
     if (tipo === 'trainer') {
         const user = auth.currentUser;
-        // O check do Firebase pode demorar ms, então idealmente usamos onAuthStateChanged.
-        // Mas como temos pagina estatica, vamos confiar no carregamento.
-        // Se nao tiver user firebase, volta.
-        // (Simplificação)
+        // Nota: Idealmente usar onAuthStateChanged em apps SPA
     }
 
+    // Para o aluno, verificamos a existência do ID no sessionStorage
     if (tipo === 'student') {
         if (!sessionStorage.getItem("studentId")) {
             window.location.href = "index.html";
