@@ -23,7 +23,6 @@ const db = firebase.firestore();
 
 const TRAINER_LOGIN = "rafael";
 const TRAINER_PASS = "123";
-const TRAINER_EMAIL_REAL = "rafael@trainer.com";
 
 /**
  * Função Global de Login
