@@ -35,9 +35,13 @@
     <header class="container">
         <div class="app-header">
             <div>
-                <h1>Painel do Treinador - Rafael</h1>
+                <h1>Painel do Treinador - <span id="trainerName">...</span></h1>
             </div>
-            <div><button onclick="window.fazerLogout()" class="btn btn-danger btn-sm">Sair</button></div>
+            <div style="display:flex; gap:0.5rem;">
+                <button onclick="abrirConfig()" class="btn btn-sm"
+                    style="background:var(--text-muted); color:white">Configurações</button>
+                <button onclick="window.fazerLogout()" class="btn btn-danger btn-sm">Sair</button>
+            </div>
         </div>
     </header>
 
@@ -101,6 +105,22 @@
             <div id="containerDias"></div>
         </div>
 
+        <!-- Modal: Configurações da Conta -->
+        <div id="modalConfig" class="card"
+            style="display: none; border: 2px solid var(--text-muted); position: fixed; top: 20%; left: 50%; width: 400px; transform: translateX(-50%); z-index: 101;">
+            <h3>Configurações da Conta</h3>
+            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);">Mude seu usuário e senha de
+                acesso.</p>
+
+            <input type="text" id="configUsername" placeholder="Novo Usuário">
+            <input type="password" id="configPassword" placeholder="Nova Senha">
+
+            <div style="display:flex; gap:0.5rem; margin-top: 1rem;">
+                <button onclick="salvarConfig()" class="btn btn-primary" style="flex:1">Salvar</button>
+                <button onclick="fecharConfig()" class="btn btn-sm" style="flex:1">Cancelar</button>
+            </div>
+        </div>
+
     </main>
 
     <script>
@@ -108,6 +128,7 @@
 
         // Proteção: Verifica se o personal está realmente logado
         window.verificarAuthDashboard();
+        document.getElementById('trainerName').innerText = sessionStorage.getItem("adminName") || 'Treinador';
 
         const firestore = firebase.firestore();
         const tabela = document.querySelector('#tabelaAlunos tbody');
@@ -168,7 +189,7 @@
                 tr.innerHTML = `
                     <td>${aluno.name}</td>
                     <td>${aluno.login}</td>
-                    <td>${aluno.password}</td>
+                    <td>${aluno.passwordPlain || aluno.password}</td>
                     <td>
                         <button class="btn btn-sm btn-primary" onclick="abrirEditor('${aluno.id}', '${aluno.name}')">Treinos</button>
                         <button class="btn btn-sm btn-danger" onclick="excluirAluno('${aluno.id}')">X</button>
@@ -190,20 +211,32 @@
         /**
          * Adiciona um novo aluno ao banco de dados
          */
-        window.adicionarAluno = function () {
+        window.adicionarAluno = async function () {
             const name = document.getElementById('novoNome').value;
             const login = document.getElementById('novoLogin').value;
             const password = document.getElementById('novaSenha').value;
 
-            if (!name) return alert("Preencha o nome");
+            if (!name || !login || !password) return alert("Preencha todos os campos.");
 
-            firestore.collection("students").add({ name, login, password }).then(() => {
+            try {
+                const senhaHash = await window.hashSenha(password);
+                await firestore.collection("students").add({
+                    name,
+                    login,
+                    password: senhaHash,
+                    passwordPlain: password, // Salva em texto puro para o treinador ver
+                    createdAt: new Date()
+                });
+
                 // Limpa campos após salvar
                 document.getElementById('novoNome').value = '';
                 document.getElementById('novoLogin').value = '';
                 document.getElementById('novaSenha').value = '';
                 carregarAlunos();
-            }).catch(e => alert("Erro: " + e));
+                alert("Aluno cadastrado com sucesso!");
+            } catch (e) {
+                alert("Erro ao cadastrar: " + e.message);
+            }
         };
 
         /**
@@ -234,7 +267,19 @@
                 } else {
                     resetCache();
                 }
-                mudarDia('segunda'); // Inicia exibindo a segunda-feira
+
+                // Detecta o dia da semana atual para abrir o editor nele
+                const diasMap = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+                const diaHj = diasMap[new Date().getDay()];
+
+                // Encontra a aba do dia de hoje
+                const tabs = document.querySelectorAll('#modalTreino .day-tab');
+                let elHj = null;
+                tabs.forEach(t => {
+                    if (t.textContent.toLowerCase().includes(diaHj.substring(0, 3))) elHj = t;
+                });
+
+                mudarDia(diaHj, elHj);
             });
         };
 
@@ -332,6 +377,46 @@
                 alert("Treino salvo com sucesso!");
                 modal.style.display = 'none';
             }).catch(e => alert("Erro ao salvar: " + e));
+        };
+
+        // --- CONFIGURAÇÕES DA CONTA ---
+
+        window.abrirConfig = function () {
+            document.getElementById('modalConfig').style.display = 'block';
+        };
+
+        window.fecharConfig = function () {
+            document.getElementById('modalConfig').style.display = 'none';
+        };
+
+        window.salvarConfig = async function () {
+            const novoUser = document.getElementById('configUsername').value.trim();
+            const novaSenha = document.getElementById('configPassword').value.trim();
+
+            if (!novoUser || !novaSenha) return alert("Preencha usuário e senha.");
+
+            try {
+                const senhaHash = await window.hashSenha(novaSenha);
+                const adminId = sessionStorage.getItem("adminId");
+
+                if (adminId) {
+                    await firestore.collection("admins").doc(adminId).update({
+                        username: novoUser,
+                        password: senhaHash
+                    });
+                } else {
+                    // Fallback se por algum motivo o ID não estiver no session
+                    await firestore.collection("admins").add({
+                        username: novoUser,
+                        password: senhaHash
+                    });
+                }
+
+                alert("Credenciais atualizadas com sucesso! Use-as no próximo login.");
+                fecharConfig();
+            } catch (e) {
+                alert("Erro ao salvar configurações: " + e.message);
+            }
         };
 
         // Carregamento inicial da página

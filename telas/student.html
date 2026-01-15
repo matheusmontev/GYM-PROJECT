@@ -42,6 +42,40 @@
             gap: 0.5rem;
             justify-content: center;
         }
+
+        .completed-exercise {
+            opacity: 0.5;
+            background-color: #f0f0f0 !important;
+            transition: all 0.3s;
+        }
+
+        .completed-exercise h3 {
+            text-decoration: line-through;
+        }
+
+        .btn-check {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-uncheck {
+            background-color: var(--text-muted);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 
@@ -86,7 +120,22 @@
             firestore.collection("workouts").doc(studentId).get().then((doc) => {
                 if (doc.exists) {
                     treinoCache = doc.data().days || {};
-                    verDia('segunda', document.querySelector('.day-tab'));
+
+                    // Detecta o dia da semana atual
+                    const diasMap = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+                    const diaHj = diasMap[new Date().getDay()];
+
+                    // Procura o elemento da aba correspondente ao dia de hoje
+                    const tabs = document.querySelectorAll('.day-tab');
+                    let tabHj = tabs[0]; // Fallback para primeira aba (Segunda)
+                    tabs.forEach(t => {
+                        // Verifica se o texto do botão contém parte do nome do dia atual
+                        if (t.textContent.toLowerCase().includes(diaHj.substring(0, 3))) {
+                            tabHj = t;
+                        }
+                    });
+
+                    verDia(diaHj, tabHj);
                 } else {
                     document.getElementById('treinoContainer').innerText = "Nenhum treino encontrado.";
                 }
@@ -100,18 +149,32 @@
             const container = document.getElementById('treinoContainer');
             container.innerHTML = '';
 
-            const exercicios = treinoCache[dia] || [];
+            const exerciciosOriginal = treinoCache[dia] || [];
+
+            // Cria uma cópia e ordena: os concluídos vão para o final
+            const exercicios = [...exerciciosOriginal].sort((a, b) => {
+                const aDone = isExCompleted(a.name, dia);
+                const bDone = isExCompleted(b.name, dia);
+                if (aDone && !bDone) return 1;
+                if (!aDone && bDone) return -1;
+                return 0;
+            });
 
             if (exercicios.length === 0) {
                 container.innerHTML = '<p>Descanso ou sem treino cadastrado.</p>';
                 return;
             }
 
-            exercicios.forEach(ex => {
+            exercicios.forEach((ex, index) => {
                 const div = document.createElement('div');
                 div.className = 'card';
+                div.id = `exercise-card-${index}`;
                 div.style.marginBottom = '1rem';
                 div.style.border = '1px solid #edf2f7';
+
+                // Verifica se está concluído hoje (usando o id do exercício ou nome)
+                const isCompleted = isExCompleted(ex.name, dia);
+                if (isCompleted) div.classList.add('completed-exercise');
 
                 let midia = '';
                 if (ex.videoLink) midia += `<a href="${ex.videoLink}" target="_blank" class="btn btn-sm btn-primary">Ver Vídeo</a> `;
@@ -126,7 +189,7 @@
                         <div>
                             <h3 style="color:var(--primary); margin-bottom:0.2rem;">${ex.name}</h3>
                             <p><strong>${ex.sets}</strong> Séries x <strong>${ex.reps}</strong> Repetições</p>
-                            <p style="font-size: 0.9rem; color: var(--text-muted);">Descanso sugerido: ${rest}s</p>
+                            <p style="font-size: 0.9rem; font-weight: bold; color: var(--primary);">${rest}s</p>
                         </div>
                         <div>${midia}</div>
                     </div>
@@ -137,6 +200,9 @@
                             <button class="btn btn-sm" style="background:#718096;color:#fff" onclick="resetTimer(this, ${rest})">Resetar</button>
                         </div>
                     </div>
+                    <button class="${isCompleted ? 'btn-uncheck' : 'btn-check'}" onclick="toggleConcluido('${ex.name}', '${dia}', ${index})">
+                        ${isCompleted ? 'Desmarcar' : '✓ Concluir Exercício'}
+                    </button>
                 `;
                 container.appendChild(div);
             });
@@ -221,6 +287,33 @@
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 10); // Toca por 10 segundos ou tempo que for definido
         }
+
+        function isExCompleted(nome, dia) {
+            const hoje = new Date().toISOString().split('T')[0];
+            const logs = JSON.parse(localStorage.getItem(`progress_${studentId}_${hoje}`) || '{}');
+            return logs[dia] && logs[dia].includes(nome);
+        }
+
+        window.toggleConcluido = function (nome, dia, index) {
+            const hoje = new Date().toISOString().split('T')[0];
+            const key = `progress_${studentId}_${hoje}`;
+            let logs = JSON.parse(localStorage.getItem(key) || '{}');
+
+            if (!logs[dia]) logs[dia] = [];
+
+            const card = document.getElementById(`exercise-card-${index}`);
+
+            if (logs[dia].includes(nome)) {
+                logs[dia] = logs[dia].filter(n => n !== nome);
+                card.classList.remove('completed-exercise');
+            } else {
+                logs[dia].push(nome);
+                card.classList.add('completed-exercise');
+            }
+
+            localStorage.setItem(key, JSON.stringify(logs));
+            verDia(dia, document.querySelector(`.day-tab.active`)); // Atualiza botões
+        };
 
         carregarTreino();
     </script>
