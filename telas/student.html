@@ -113,6 +113,50 @@
             gap: 0.5rem;
             margin-top: 1rem;
         }
+
+        /* Estilo para a celebração de conclusão */
+        .congratulations-card {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        .congratulations-card img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+            animation: trophyBounce 2s infinite ease-in-out;
+        }
+
+        @keyframes trophyBounce {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-10px) scale(1.1);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 
@@ -203,6 +247,19 @@
             if (exercicios.length === 0) {
                 container.innerHTML = '<p>Descanso ou sem treino cadastrado.</p>';
                 return;
+            }
+
+            // Verifica se todos os exercícios foram concluídos
+            const todosConcluidos = exercicios.every(ex => isExCompleted(ex.name, dia));
+            if (todosConcluidos) {
+                const congrats = document.createElement('div');
+                congrats.className = 'congratulations-card';
+                congrats.innerHTML = `
+                    <img src="../imagem/trofeu.png" alt="Troféu" style="width: 80px; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Parabéns!</h2>
+                    <p style="font-size: 1rem; opacity: 0.9;">Você completou todos os exercícios de hoje!</p>
+                `;
+                container.appendChild(congrats);
             }
 
             exercicios.forEach((ex, index) => {
