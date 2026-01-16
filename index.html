@@ -48,28 +48,33 @@
     </style>
 </head>
 
-<body class="bg-gradient login-body">
-    <div class="login-card">
+<body class="login-body">
+    <div class="card login-card" style="max-width: 400px; padding: 2.5rem;">
         <!-- Logo do Sistema -->
-        <img src="imagem/foto-logo.jpeg" alt="Logo do SaaS" class="logo-img">
-        <h2>Acesse sua conta</h2>
+        <div style="margin-bottom: 2rem;">
+            <img src="imagem/foto-logo.jpeg" alt="Logo do SaaS" class="logo-img">
+            <h1 style="font-size: 1.5rem; margin-top: 1rem;">Bem-vindo</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Acesse sua conta para continuar</p>
+        </div>
 
         <!-- Formulário de Login -->
-        <form id="loginForm">
-            <div class="input-group">
-                <label for="usuario">Usuário</label>
-                <input type="text" id="usuario" placeholder="Digite seu usuário" required>
+        <form id="loginForm" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div style="text-align: left;">
+                <label for="usuario"
+                    style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Usuário</label>
+                <input type="text" id="usuario" placeholder="Seu nome de usuário" required>
             </div>
-            <div class="input-group">
-                <label for="senha">Senha</label>
-                <input type="password" id="senha" placeholder="Digite sua senha" required>
+            <div style="text-align: left;">
+                <label for="senha"
+                    style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Senha</label>
+                <input type="password" id="senha" placeholder="Sua senha secreta" required>
             </div>
-            <!-- Botão de Envio coordenado com o style.css -->
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Entrar</button>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Entrar na
+                Conta</button>
         </form>
 
         <!-- Mensagem de erro oculta por padrão -->
-        <div id="msgErro" class="error-message">Usuário ou senha incorretos.</div>
+        <div id="msgErro" class="error-message">Ops! Usuário ou senha incorretos. 😕</div>
     </div>
 
     <script>
