@@ -171,8 +171,6 @@
                     <thead>
                         <tr>
                             <th>Nome</th>
-                            <th>Login</th>
-                            <th>Senha</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -312,11 +310,9 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${aluno.name}</td>
-                    <td>${aluno.login}</td>
-                    <td>${aluno.passwordPlain || aluno.password}</td>
                     <td>
-                        <button class="btn btn-sm" style="background:var(--text-muted); color:white" onclick="abrirEdicaoAluno('${aluno.id}')">Editar</button>
                         <button class="btn btn-sm btn-primary" onclick="abrirEditor('${aluno.id}', '${aluno.name}')">Treinos</button>
+                        <button class="btn btn-sm" style="background:var(--text-muted); color:white" onclick="abrirEdicaoAluno('${aluno.id}')">Editar</button>
                         <button class="btn btn-sm btn-danger" onclick="excluirAluno('${aluno.id}')">X</button>
                     </td>
                 `;
@@ -388,7 +384,7 @@
             alunoPerfilId = id;
             document.getElementById('editNome').value = aluno.name;
             document.getElementById('editLogin').value = aluno.login;
-            document.getElementById('editSenha').value = ''; // Sempre limpo por segurança
+            document.getElementById('editSenha').value = aluno.passwordPlain || ''; // Mostra a senha atual se disponível
             document.getElementById('modalEditarAluno').style.display = 'block';
         };
 
