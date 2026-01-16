@@ -216,25 +216,19 @@
 
                 // Lógica de Mídia Embutida
                 let midiaHtml = '';
-                if (ex.videoLink) {
-                    const embedUrl = getEmbedUrl(ex.videoLink);
-                    midiaHtml += `
-                        <div class="media-container" style="margin-bottom: 0.5rem;">
-                            <iframe src="${embedUrl}" title="Vídeo do exercício" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen></iframe>
-                        </div>
-                        <div style="text-align:center; margin-bottom: 1rem;">
-                            <a href="${ex.videoLink}" target="_blank" style="font-size: 0.8rem; color: var(--primary); text-decoration: none;">
-                                📺 Abrir vídeo caso não carregue
-                            </a>
-                        </div>
-                    `;
-                }
                 if (ex.photoLink) {
                     midiaHtml += `
                         <div class="media-container">
                             <img src="${ex.photoLink}" alt="Demonstração">
+                        </div>
+                    `;
+                }
+                if (ex.videoLink) {
+                    midiaHtml += `
+                        <div style="text-align:center; margin-bottom: 1rem;">
+                            <a href="${ex.videoLink}" target="_blank" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: bold;">
+                                📺 Clique aqui para ver o vídeo demonstrativo
+                            </a>
                         </div>
                     `;
                 }
