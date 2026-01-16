@@ -40,45 +40,53 @@ window.hashSenha = async function (senha) {
  * @param {string} senha - Senha do usuário
  */
 window.fazerLogin = async function (usuario, senha) {
-    console.log("Tentando login...");
+    console.log("Tentando login para:", usuario);
 
-    const senhaHash = await window.hashSenha(senha);
+    // Função auxiliar para verificar se uma string parece um hash SHA-256 (64 hex chars)
+    const isHash = (str) => /^[a-f0-9]{64}$/i.test(str);
+
+    // Gera o hash da senha fornecida
+    const senhaFornecidaHash = await window.hashSenha(senha);
+    const senhaFornecidaHashUpper = senhaFornecidaHash.toUpperCase();
 
     try {
-        // 1. Tenta login como Treinador via Firestore (Coleção 'admins')
-        // Tenta achar com a senha já criptografada (padrão novo)
+        // 1. TENTA LOGIN COMO TREINADOR (ADMIN)
         let adminSnapshot = await db.collection("admins")
             .where("username", "==", usuario)
-            .where("password", "==", senhaHash)
             .get();
-
-        // Se não achou com Hash, tenta achar com a senha em texto puro (migração do admin)
-        if (adminSnapshot.empty) {
-            adminSnapshot = await db.collection("admins")
-                .where("username", "==", usuario)
-                .where("password", "==", senha)
-                .get();
-
-            if (!adminSnapshot.empty) {
-                // Encontrou admin com senha antiga! Vamos atualizar.
-                const adminId = adminSnapshot.docs[0].id;
-                await db.collection("admins").doc(adminId).update({ password: senhaHash });
-                console.log("Senha do administrador migrada para Hash.");
-            }
-        }
 
         if (!adminSnapshot.empty) {
             const adminDoc = adminSnapshot.docs[0];
-            sessionStorage.setItem("isAdmin", "true");
-            sessionStorage.setItem("adminId", adminDoc.id);
-            sessionStorage.setItem("adminName", usuario);
-            window.location.href = "telas/dashboard.html";
-            return;
+            const adminData = adminDoc.data();
+            const storedPass = adminData.password;
+
+            let logadoAdmin = false;
+
+            // Comparação robusta (Hash Case-Insensitive ou Texto Puro)
+            if (storedPass === senhaFornecidaHash || storedPass.toUpperCase() === senhaFornecidaHashUpper || storedPass === senha) {
+                logadoAdmin = true;
+            }
+
+            if (logadoAdmin) {
+                // Se logou e a senha no DB não era o hash padrão (lowercase), atualiza.
+                // Mas apenas se a senha fornecida NÃO for um hash puro (evita double-hash)
+                if (storedPass !== senhaFornecidaHash && !isHash(senha)) {
+                    await db.collection("admins").doc(adminDoc.id).update({ password: senhaFornecidaHash });
+                    console.log("Senha do administrador normalizada para Hash.");
+                }
+
+                sessionStorage.setItem("isAdmin", "true");
+                sessionStorage.setItem("adminId", adminDoc.id);
+                sessionStorage.setItem("adminName", usuario);
+                window.location.href = "telas/dashboard.html";
+                return;
+            }
         }
 
+        // Caso especial: Admin Inicial
         const allAdmins = await db.collection("admins").limit(1).get();
         if (allAdmins.empty && usuario === "rafael" && senha === "123") {
-            const newAdmin = { username: "rafael", password: senhaHash };
+            const newAdmin = { username: "rafael", password: senhaFornecidaHash };
             const docRef = await db.collection("admins").add(newAdmin);
             sessionStorage.setItem("isAdmin", "true");
             sessionStorage.setItem("adminId", docRef.id);
@@ -86,47 +94,51 @@ window.fazerLogin = async function (usuario, senha) {
             window.location.href = "telas/dashboard.html";
             return;
         }
+
     } catch (e) {
         console.error("Erro ao verificar admins:", e);
     }
 
-    // 2. Verifica se é um Aluno via Firestore (login por apelido/username)
+    // 2. TENTA LOGIN COMO ALUNO
     try {
-        // Primeiro: tenta achar com a senha já criptografada (padrão novo)
-        let snapshot = await db.collection("students")
+        let studentSnapshot = await db.collection("students")
             .where("login", "==", usuario)
-            .where("password", "==", senhaHash)
             .get();
 
-        // Segundo: se não achou, tenta achar com a senha em texto puro (migração)
-        if (snapshot.empty) {
-            snapshot = await db.collection("students")
-                .where("login", "==", usuario)
-                .where("password", "==", senha)
-                .get();
+        if (!studentSnapshot.empty) {
+            const studentDoc = studentSnapshot.docs[0];
+            const studentData = studentDoc.data();
+            const storedPass = studentData.password;
 
-            if (!snapshot.empty) {
-                // Encontrou com senha antiga! Vamos atualizar para a nova automaticamente.
-                const docId = snapshot.docs[0].id;
-                await db.collection("students").doc(docId).update({
-                    password: senhaHash,
-                    passwordPlain: senha // Salva o texto puro para o treinador
-                });
-                console.log("Senha do aluno migrada para Hash com sucesso.");
+            let logadoEstudante = false;
+
+            // Logica de comparação robusta
+            if (storedPass === senhaFornecidaHash || storedPass.toUpperCase() === senhaFornecidaHashUpper || storedPass === senha) {
+                logadoEstudante = true;
+            }
+
+            if (logadoEstudante) {
+                // Atualiza/Migra se necessário
+                // IMPORTANTE: Só atualiza se o que o usuário digitou NÃO for um hash
+                // Isso resolve o problema de "entrar com hash" e gerar "hash do hash"
+                if (storedPass !== senhaFornecidaHash && !isHash(senha)) {
+                    await db.collection("students").doc(studentDoc.id).update({
+                        password: senhaFornecidaHash,
+                        passwordPlain: senha
+                    });
+                    console.log("Senha do aluno migrada/normalizada com sucesso.");
+                }
+
+                sessionStorage.setItem("studentId", studentDoc.id);
+                sessionStorage.setItem("studentName", studentData.name);
+                window.location.href = "telas/student.html";
+                return;
             }
         }
 
-        if (!snapshot.empty) {
-            const doc = snapshot.docs[0];
-            const data = doc.data();
+        // Se chegou aqui, não encontrou admin nem aluno válido
+        alert("Usuário ou senha incorretos.");
 
-            // Salva a sessão do aluno no sessionStorage
-            sessionStorage.setItem("studentId", doc.id);
-            sessionStorage.setItem("studentName", data.name);
-            window.location.href = "telas/student.html";
-        } else {
-            alert("Usuário ou senha incorretos.");
-        }
     } catch (error) {
         console.error("Erro login aluno:", error);
         alert("Erro ao conectar no banco de dados.");
