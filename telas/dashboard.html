@@ -131,15 +131,31 @@
             </div>
 
             <!-- Formulário para cadastrar novo aluno (escondido por padrão) -->
-            <div id="formNovoAluno" class="card"
-                style="display: none; background: #f8fafc; border: 1px solid var(--border); margin-bottom: 1.5rem;">
+            <div id="formNovoAluno"
+                style="display: none; background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
                 <h4 style="margin-bottom: 1rem;">Cadastrar Novo Aluno</h4>
                 <div class="add-student-form"
-                    style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.5rem;">
-                    <input type="text" id="novoNome" placeholder="Nome do Aluno">
-                    <input type="text" id="novoLogin" placeholder="Login (ex: joao)">
-                    <input type="text" id="novaSenha" placeholder="Senha (ex: 1234)">
-                    <button onclick="adicionarAluno()" class="btn btn-primary">Salvar</button>
+                    style="display: flex; flex-direction: column; gap: 0.8rem; max-width: 400px;">
+                    <div>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.2rem;">Nome
+                            Completo</label>
+                        <input type="text" id="novoNome" placeholder="Ex: João Silva" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.2rem;">Usuário
+                            de Acesso (Login)</label>
+                        <input type="text" id="novoLogin" placeholder="Ex: joao.silva" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label
+                            style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.2rem;">Senha
+                            Inicial</label>
+                        <input type="text" id="novaSenha" placeholder="Ex: 123456" style="width: 100%;">
+                    </div>
+                    <button onclick="adicionarAluno()" class="btn btn-primary" style="margin-top: 0.5rem;">Salvar
+                        Cadastro</button>
                 </div>
             </div>
 
