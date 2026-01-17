@@ -1,29 +1,40 @@
-# 🏋️‍♂️ Gym Project
+# 🏋️‍♂️ GYM-PRO: SaaS de Gestão de Treinos Profissional
 
-> Um ecossistema completo para gestão de treinos e alunos. Simples, moderno e eficiente.
+**GYM-PRO** é uma plataforma SaaS (Software as a Service) de alto desempenho, desenvolvida para Personal Trainers e Academias que buscam profissionalizar a entrega de treinos e o acompanhamento de alunos. 
+
+O sistema oferece uma experiência **Premium** com design focado em usabilidade extrema, utilizando tecnologias modernas para garantir rapidez, segurança e acessibilidade em qualquer dispositivo.
 
 ---
 
-## 📖 Sobre o Projeto
+## 💎 Diferenciais e Funcionalidades
 
-**Gym Project** é uma solução SaaS projetada para modernizar a experiência em academias e consultorias de personal trainer. Focamos em entregar uma interface limpa e de alta performance, eliminando complexidades desnecessárias para conectar treinadores e alunos.
+O projeto está em estágio avançado, contando com um ecossistema completo de gestão:
 
-O dashboard inteligente adapta-se ao perfil do usuário, entregando exatamente o que cada um precisa: controle total para o administrador e clareza nos treinos para o aluno.
+- **🔐 Autenticação Inteligente:** Sistema de login seguro diferenciando automaticamente Perfis de Treinador (Admin) e Aluno.
+- **📊 Painel do Treinador (Admin):**
+  - Gestão completa de base de alunos.
+  - Criador de treinos dinâmico com suporte a múltiplos exercícios por dia.
+  - Vinculação de vídeos (YouTube) e fotos demonstrativas para cada exercício.
+  - Segurança de senhas com criptografia hash SHA-256 no cliente.
+- **📱 Interface do Aluno (Mobile First):**
+  - Visualização categorizada por dias da semana.
+  - Cronômetro de descanso integrado para cada exercício.
+  - Check-list de conclusão de exercícios em tempo real.
+  - Indicadores visuais de progresso e troféus de motivação.
+- **🎨 Design System Premium:** Interface baseada em **Glassmorphism**, com animações fluidas, modo claro otimizado e total responsividade.
 
 ---
 
 ## 🛠️ Stack Tecnológica
 
-Construído sobre os pilares fundamentais da web para garantir longevidade e compatibilidade:
+O GYM-PRO foi arquitetado para ser leve e escalável, eliminando dependências pesadas de build:
 
-*   **HTML5 Semântico**
-*   **CSS3 Moderno** (Custom Properties, Flexbox, Transitions)
-*   **JavaScript (ES6+)**
+- **Linguagem:** HTML5 Semântico e JavaScript (ES6+ Modular).
+- **Backend-as-a-Service:** Firebase (Auth & Firestore) v9 Modular SDK.
+- **Ícones:** Bootstrap Icons.
+- **Tipografia:** Google Fonts (Outfit & Inter).
 
----
+## 📈 Status do Projeto
+O sistema encontra-se na versão **quase completa**, com core business totalmente funcional e pronto para uso profissional.
 
-## 🚀 Instalação e Uso
-
-O projeto é "Plug & Play". Não requer NPM, builds ou configurações de servidor para rodar o front-end.
-
-Desenvolvido para transformar 💦 suor em resultados.
+Desenvolvido para transformar a gestão esportiva em uma experiência tecnológica de elite.
