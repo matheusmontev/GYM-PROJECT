@@ -64,10 +64,14 @@ window.fazerLogin = async function (usuario, senha) {
                 sessionStorage.setItem("isAdmin", "true");
                 sessionStorage.setItem("adminId", adminDoc.id);
                 sessionStorage.setItem("adminName", usuario);
-                window.location.href = "telas/dashboard.html";
+
+                // Redirecionamento robusto para GitHub Pages
+                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                window.location.href = basePath + "telas/dashboard.html";
                 return;
             }
         }
+        // ... (omitting intermediate lines for clarity in replace_file_content, will use multi-replace if needed but let's try to target specific blocks)
 
         // Caso especial: Admin Inicial
         const qAnyAdmin = query(collection(db, "admins"), limit(1));
@@ -114,7 +118,10 @@ window.fazerLogin = async function (usuario, senha) {
 
                 sessionStorage.setItem("studentId", studentDoc.id);
                 sessionStorage.setItem("studentName", studentData.name);
-                window.location.href = "telas/student.html";
+
+                // Redirecionamento robusto para GitHub Pages
+                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                window.location.href = basePath + "telas/student.html";
                 return;
             }
         }
@@ -123,7 +130,11 @@ window.fazerLogin = async function (usuario, senha) {
 
     } catch (error) {
         console.error("Erro login aluno:", error);
-        alert("Erro ao conectar no banco de dados.");
+        if (error.code === 'permission-denied' || error.message.includes('auth/unauthorized-domain')) {
+            alert("ERRO DE DEPLOY: O domínio do GitHub Pages não está autorizado no Firebase. Verifique as configurações de 'Authorized Domains' no console do Firebase.");
+        } else {
+            alert("Erro ao conectar no banco de dados: " + error.message);
+        }
     }
 };
 

@@ -90,7 +90,7 @@
                         placeholder="Sua senha secreta" required style="border-radius: 0 12px 12px 0;">
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+            <button type="submit" id="btnEntrar" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
                 <i class="bi bi-box-arrow-in-right me-2"></i>Entrar na Conta
             </button>
         </form>
@@ -105,19 +105,28 @@
         const msgErro = document.getElementById('msgErro');
 
         // Escuta o evento de submissão do formulário
-        loginForm.addEventListener('submit', function (event) {
+        loginForm.addEventListener('submit', async function (event) {
             event.preventDefault(); // Impede o recarregamento da página
             msgErro.classList.remove('visible');
+
+            const btn = document.getElementById('btnEntrar');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Carregando...';
+            btn.disabled = true;
 
             // Coleta os valores dos campos
             const usuarioInput = document.getElementById('usuario').value.trim();
             const senhaInput = document.getElementById('senha').value.trim();
 
-            /**
-             * Chama a função global definida no app_global.js.
-             * Esta função decide se é o Personal ou o Aluno que está logando.
-             */
-            window.fazerLogin(usuarioInput, senhaInput);
+            try {
+                await window.fazerLogin(usuarioInput, senhaInput);
+            } catch (err) {
+                console.error(err);
+                msgErro.classList.add('visible');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         });
 
         // Remove a mensagem de erro quando o usuário começa a digitar novamente
