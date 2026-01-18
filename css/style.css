@@ -264,6 +264,18 @@ tr:hover td {
     background: #f8fafc;
 }
 
+/* Estilo para célula de aluno com botões abaixo */
+.student-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.student-name {
+    font-size: 1rem;
+    color: var(--text-dark);
+}
+
 /* 11. Estilos Específicos do Aluno */
 .exercise-card {
     border-left: 6px solid var(--primary);

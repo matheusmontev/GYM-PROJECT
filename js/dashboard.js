@@ -71,18 +71,20 @@ function renderizarTabelaAlunos(lista) {
     lista.forEach((aluno) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="align-middle fw-medium">${aluno.name}</td>
             <td>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-primary" onclick="abrirEditor('${aluno.id}', '${aluno.name}')">
-                        <i class="bi bi-journal-text me-1"></i> Treinos
-                    </button>
-                    <button class="btn btn-sm btn-light border" onclick="abrirEdicaoAluno('${aluno.id}')">
-                        <i class="bi bi-pencil me-1"></i> Editar
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="excluirAluno('${aluno.id}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                <div class="student-cell">
+                    <div class="student-name fw-medium mb-2">${aluno.name}</div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-sm btn-primary" onclick="abrirEditor('${aluno.id}', '${aluno.name}')">
+                            <i class="bi bi-journal-text me-1"></i> Treinos
+                        </button>
+                        <button class="btn btn-sm btn-light border" onclick="abrirEdicaoAluno('${aluno.id}')">
+                            <i class="bi bi-pencil me-1"></i> Editar
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="excluirAluno('${aluno.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </td>
         `;
