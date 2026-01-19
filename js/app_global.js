@@ -40,7 +40,7 @@ window.fazerLogin = async function (usuario, senha) {
     const senhaFornecidaHashUpper = senhaFornecidaHash.toUpperCase();
 
     try {
-        // 1. TENTA LOGIN COMO TREINADOR (ADMIN)
+        // 1. TENTA LOGIN COMO ADMIN/TREINADOR
         const qAdmin = query(collection(db, "admins"), where("username", "==", usuario));
         const adminSnapshot = await getDocs(qAdmin);
 
@@ -50,42 +50,55 @@ window.fazerLogin = async function (usuario, senha) {
             const storedPass = adminData.password;
 
             let logadoAdmin = false;
-
+            // Verifica senha (Hash ou Plain/Legacy)
             if (storedPass === senhaFornecidaHash || storedPass.toUpperCase() === senhaFornecidaHashUpper || storedPass === senha) {
                 logadoAdmin = true;
             }
 
             if (logadoAdmin) {
+                // Atualiza hash se necessário
                 if (storedPass !== senhaFornecidaHash && !isHash(senha)) {
                     await updateDoc(doc(db, "admins", adminDoc.id), { password: senhaFornecidaHash });
-                    console.log("Senha do administrador normalizada para Hash.");
                 }
 
+                // *** VERIFICAÇÃO DE ROLE E LICENÇA ***
+
+                // Caso 1: Super Admin
+                if (adminData.role === 'super_admin') {
+                    sessionStorage.setItem("isAdmin", "true");
+                    sessionStorage.setItem("isSuperAdmin", "true");
+                    sessionStorage.setItem("adminId", adminDoc.id);
+                    sessionStorage.setItem("adminName", usuario);
+
+                    const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                    window.location.href = basePath + "telas/admin_license.html";
+                    return;
+                }
+
+                // Caso 2: Personal Trainer (Verifica Licença)
+                const licenseActive = adminData.licenseActive !== false; // Default true se undefined (mas ideal ser definido)
+                const licenseExpiration = adminData.licenseExpiration ? new Date(adminData.licenseExpiration) : null;
+                const now = new Date();
+
+                // Se licença inativa OU expirada
+                if (!licenseActive || (licenseExpiration && licenseExpiration < now)) {
+                    const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                    window.location.href = basePath + "telas/license_expired.html";
+                    return;
+                }
+
+                // Login Sucesso Trainer
                 sessionStorage.setItem("isAdmin", "true");
                 sessionStorage.setItem("adminId", adminDoc.id);
                 sessionStorage.setItem("adminName", usuario);
 
-                // Redirecionamento robusto para GitHub Pages
                 const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
                 window.location.href = basePath + "telas/dashboard.html";
                 return;
             }
         }
-        // ... (omitting intermediate lines for clarity in replace_file_content, will use multi-replace if needed but let's try to target specific blocks)
 
-        // Caso especial: Admin Inicial
-        const qAnyAdmin = query(collection(db, "admins"), limit(1));
-        const allAdmins = await getDocs(qAnyAdmin);
-
-        if (allAdmins.empty && usuario === "rafael" && senha === "123") {
-            const newAdmin = { username: "rafael", password: senhaFornecidaHash };
-            const docRef = await addDoc(collection(db, "admins"), newAdmin);
-            sessionStorage.setItem("isAdmin", "true");
-            sessionStorage.setItem("adminId", docRef.id);
-            sessionStorage.setItem("adminName", "rafael");
-            window.location.href = "telas/dashboard.html";
-            return;
-        }
+        // Caso especial removido (setup inicial agora é via setup_db.html ou script de super admin)
 
     } catch (e) {
         console.error("Erro ao verificar admins:", e);
@@ -113,13 +126,24 @@ window.fazerLogin = async function (usuario, senha) {
                         password: senhaFornecidaHash,
                         passwordPlain: senha
                     });
-                    console.log("Senha do aluno migrada/normalizada com sucesso.");
+                }
+
+                // Verifica status do TREINADOR do aluno (Opcional, mas recomendado para bloqueio total)
+                if (studentData.trainerId) {
+                    const trainerRef = await getDoc(doc(db, "admins", studentData.trainerId));
+                    if (trainerRef.exists()) {
+                        const trainerData = trainerRef.data();
+                        const tExpired = trainerData.licenseExpiration ? new Date(trainerData.licenseExpiration) < new Date() : false;
+                        if (trainerData.licenseActive === false || tExpired) {
+                            alert("O acesso do seu treinador está temporariamente suspenso. Contate-o.");
+                            return;
+                        }
+                    }
                 }
 
                 sessionStorage.setItem("studentId", studentDoc.id);
                 sessionStorage.setItem("studentName", studentData.name);
 
-                // Redirecionamento robusto para GitHub Pages
                 const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
                 window.location.href = basePath + "telas/student.html";
                 return;
@@ -130,11 +154,7 @@ window.fazerLogin = async function (usuario, senha) {
 
     } catch (error) {
         console.error("Erro login aluno:", error);
-        if (error.code === 'permission-denied' || error.message.includes('auth/unauthorized-domain')) {
-            alert("ERRO DE DEPLOY: O domínio do GitHub Pages não está autorizado no Firebase. Verifique as configurações de 'Authorized Domains' no console do Firebase.");
-        } else {
-            alert("Erro ao conectar no banco de dados: " + error.message);
-        }
+        alert("Erro ao conectar no banco de dados.");
     }
 };
 

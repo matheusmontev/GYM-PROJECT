@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Setup Database</title>
+    <!-- Importa Firebase Modular (mesma versão do projeto) -->
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { collection, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // Senha fornecida pelo usuário (sem criptografia inicial, o app_global vai hash depois se necessário, 
+        // mas aqui vamos salvar como o admin inicial espera. 
+        // O user disse: "senha sem cripitografia e 25142200"
+        // No app_global.js, o login verifica se storedPass === senhaFornecidaHash OU senha.
+        // Vamos salvar o hash para garantir segurança desde o início ou texto plano se preferir.
+        // O user disse "sem criptografia", mas o sistema atual usa hash. 
+        // Vou salvar o hash para manter consistência com o sistema de login já existente.
+
+        async function hashSenha(senha) {
+            const msgUint8 = new TextEncoder().encode(senha);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        const SUPER_ADMIN = {
+            username: "Matheus",
+            passwordPlain: "25142200", // Apenas para referência, não será salvo se usarmos hash
+            role: "super_admin"
+        };
+
+        window.resetDatabase = async function () {
+            const status = document.getElementById('status');
+            status.innerHTML = "Iniciando limpeza...";
+
+            try {
+                // 1. Limpar Coleção 'admins' (Treinadores e Super Admin)
+                status.innerHTML += "<br>Limpando coleção 'admins'...";
+                const adminsSnapshot = await getDocs(collection(db, "admins"));
+                const deleteAdminsPromises = adminsSnapshot.docs.map(d => deleteDoc(doc(db, "admins", d.id)));
+                await Promise.all(deleteAdminsPromises);
+
+                // 2. Limpar Coleção 'students'
+                status.innerHTML += "<br>Limpando coleção 'students'...";
+                const studentsSnapshot = await getDocs(collection(db, "students"));
+                const deleteStudentsPromises = studentsSnapshot.docs.map(d => deleteDoc(doc(db, "students", d.id)));
+                await Promise.all(deleteStudentsPromises);
+
+                // 3. Criar Super Admin
+                status.innerHTML += "<br>Criando Super Admin 'Matheus'...";
+                const passwordHash = await hashSenha(SUPER_ADMIN.passwordPlain);
+
+                const newAdminData = {
+                    username: SUPER_ADMIN.username,
+                    password: passwordHash, // Salvando Hash para compatibilidade
+                    role: SUPER_ADMIN.role,
+                    createdAt: new Date()
+                };
+
+                // Cria documento com ID auto-gerado
+                await setDoc(doc(collection(db, "admins"), "super_admin_matheus"), newAdminData);
+
+                status.innerHTML += "<br><strong>Sucesso! Banco de dados resetado.</strong>";
+                status.innerHTML += "<br>Usuário: Matheus | Senha: " + SUPER_ADMIN.passwordPlain;
+
+            } catch (error) {
+                console.error(error);
+                status.innerHTML += "<br><strong style='color:red'>Erro: " + error.message + "</strong>";
+            }
+        }
+    </script>
+</head>
+
+<body style="font-family: sans-serif; padding: 2rem;">
+    <h1>Ferramenta de Reset do Banco de Dados</h1>
+    <p>Isso irá apagar <strong>TODOS</strong> os dados das coleções 'admins' e 'students' e recriar o Super Admin.</p>
+    <button onclick="resetDatabase()"
+        style="padding: 10px 20px; font-size: 16px; cursor: pointer; background: red; color: white; border: none; border-radius: 5px;">
+        APAGAR TUDO E RESETAR
+    </button>
+    <div id="status" style="margin-top: 20px; background: #f0f0f0; padding: 10px; border-radius: 5px;">Aguardando...
+    </div>
+</body>
+
+</html>

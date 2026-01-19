@@ -1,6 +1,7 @@
 /**
  * Lógica do Painel do Treinador (Dashboard) - Modular SDK
  */
+console.log("Dashboard JS v3 loaded - RESTORED");
 
 import { db } from './app_global.js';
 import {
@@ -12,7 +13,8 @@ import {
     updateDoc,
     deleteDoc,
     setDoc,
-    query
+    query,
+    where
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 // Proteção: Verifica se o personal está realmente logado
@@ -35,8 +37,19 @@ function resetCache() {
 
 window.carregarAlunos = async function () {
     tabela.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
+
+    // Pega o ID do treinador logado
+    const trainerId = sessionStorage.getItem("adminId");
+    if (!trainerId) {
+        window.location.href = "../index.html";
+        return;
+    }
+
     try {
-        const querySnapshot = await getDocs(collection(db, "students"));
+        // Filtra alunos apenas deste treinador
+        const q = query(collection(db, "students"), where("trainerId", "==", trainerId));
+        const querySnapshot = await getDocs(q);
+
         alunosLocal = [];
         querySnapshot.forEach((doc) => {
             alunosLocal.push({ id: doc.id, ...doc.data() });
@@ -105,6 +118,9 @@ window.adicionarAluno = async function () {
 
     if (!name || !login || !password) return alert("Preencha todos os campos.");
 
+    const trainerId = sessionStorage.getItem("adminId");
+    if (!trainerId) return alert("Erro de sessão. Faça login novamente.");
+
     try {
         const senhaHash = await window.hashSenha(password);
         await addDoc(collection(db, "students"), {
@@ -112,6 +128,7 @@ window.adicionarAluno = async function () {
             login,
             password: senhaHash,
             passwordPlain: password,
+            trainerId: trainerId, // Vincula ao treinador
             createdAt: new Date()
         });
 
@@ -344,38 +361,6 @@ window.showToast = function (msg) {
     toast.innerText = msg;
     toast.className = "show";
     setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
-};
-
-window.abrirConfig = function () {
-    document.getElementById('modalConfig').style.display = 'block';
-};
-
-window.fecharConfig = function () {
-    document.getElementById('modalConfig').style.display = 'none';
-};
-
-window.salvarConfig = async function () {
-    const novoUser = document.getElementById('configUsername').value.trim();
-    const novaSenha = document.getElementById('configPassword').value.trim();
-
-    if (!novoUser || !novaSenha) return alert("Preencha usuário e senha.");
-
-    try {
-        const senhaHash = await window.hashSenha(novaSenha);
-        const adminId = sessionStorage.getItem("adminId");
-
-        if (adminId) {
-            await updateDoc(doc(db, "admins", adminId), {
-                username: novoUser,
-                password: senhaHash
-            });
-        }
-
-        showToast("Credenciais atualizadas! ✅");
-        fecharConfig();
-    } catch (e) {
-        alert("Erro ao salvar configurações: " + e.message);
-    }
 };
 
 // Carregamento inicial da página

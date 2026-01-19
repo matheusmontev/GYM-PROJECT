@@ -13,8 +13,8 @@
     <link rel="stylesheet" href="../css/style.css">
 
     <!-- Scripts Globais (Firebase Modular) -->
-    <script type="module" src="../js/app_global.js"></script>
-    <script type="module" src="../js/dashboard.js"></script>
+    <script type="module" src="../js/app_global.js?v=2"></script>
+    <script type="module" src="../js/dashboard.js?v=3"></script>
 
     <style>
         /* Estilos específicos para o conteúdo de cada dia no editor */
@@ -182,8 +182,7 @@
                         style="font-weight: 600; color: var(--text-dark);">...</span></p>
             </div>
             <div style="display:flex; gap:0.75rem;">
-                <button onclick="abrirConfig()" class="btn btn-sm"
-                    style="background:rgba(226, 232, 240, 0.5); color:var(--text-main); border: 1px solid var(--border);">Configurações</button>
+                <!-- Configurações removidas -->
                 <button onclick="window.fazerLogout()" class="btn btn-danger btn-sm">Sair</button>
             </div>
         </div>
@@ -290,21 +289,7 @@
             <div id="containerDias"></div>
         </div>
 
-        <!-- Modal: Configurações da Conta -->
-        <div id="modalConfig" class="card"
-            style="display: none; border: 2px solid var(--text-muted); position: fixed; top: 20%; left: 50%; width: 400px; transform: translateX(-50%); z-index: 101;">
-            <h3>Configurações da Conta</h3>
-            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);">Mude seu usuário e senha de
-                acesso.</p>
-
-            <input type="text" id="configUsername" placeholder="Novo Usuário">
-            <input type="password" id="configPassword" placeholder="Nova Senha">
-
-            <div style="display:flex; gap:0.5rem; margin-top: 1rem;">
-                <button onclick="salvarConfig()" class="btn btn-primary" style="flex:1">Salvar</button>
-                <button onclick="fecharConfig()" class="btn btn-sm" style="flex:1">Cancelar</button>
-            </div>
-        </div>
+        <!-- Modal Configurações removido -->
 
         <!-- Modal: Editar Aluno -->
         <div id="modalEditarAluno" class="card"
