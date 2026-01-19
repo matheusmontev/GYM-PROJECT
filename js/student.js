@@ -27,8 +27,8 @@ function getTodayDateString() {
 // Função para verificar se um exercício está concluído
 function isExCompleted(exerciseName, day) {
     const today = getTodayDateString();
-    // progressoCache[today] -> { 'segunda': { 'Exercicio A': true, 'Exercicio B': false }, 'terca': ... }
-    return progressoCache[day] && progressoCache[day][exerciseName] === true;
+    // progressoCache[day] é um array de strings com os nomes dos exercícios concluídos
+    return progressoCache[day] && Array.isArray(progressoCache[day]) && progressoCache[day].includes(exerciseName);
 }
 
 window.carregarTreino = async function () {
@@ -222,7 +222,7 @@ window.verDia = function (dia, elBtn) {
                 </div>
                 <div class="timer-display" style="margin-bottom: 1rem;">${min}:${sec}</div>
                 <div class="timer-controls">
-                    <button class="btn btn-sm btn-primary" onclick="toggleTimer(this, ${rest})" style="flex: 1;">
+                    <button class="btn btn-sm btn-primary" onclick="toggleTimer(this, ${rest}, '${ex.name.replace(/'/g, "\\'")}', '${dia}', ${index})" style="flex: 1;">
                         <i class="bi bi-play-fill"></i> Iniciar
                     </button>
                     <button class="btn btn-sm" style="background:rgba(226, 232, 240, 0.8); color:var(--text-main); flex: 1;" onclick="resetTimer(this, ${rest})">
@@ -253,7 +253,7 @@ function getEmbedUrl(url) {
 
 let activeTimers = {};
 
-window.toggleTimer = function (btn, restTime) {
+window.toggleTimer = function (btn, restTime, exName, day, index) {
     const container = btn.closest('.timer-container');
     const display = container.querySelector('.timer-display');
     const timerId = container.id;
@@ -277,10 +277,19 @@ window.toggleTimer = function (btn, restTime) {
             if (timeLeft <= 0) {
                 clearInterval(interval);
                 delete activeTimers[timerId];
-                btn.innerText = 'Iniciar Descanso';
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-primary');
+
+                // Toca o alarme
                 tocarAlarme();
+
+                // Transforma o botão em "Confirmar"
+                btn.innerText = 'Confirmar Conclusão';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-success');
+
+                // Ao clicar, finaliza o exercício
+                btn.onclick = function () {
+                    window.toggleConcluido(exName, day, index);
+                };
             }
         }, 1000);
         activeTimers[timerId] = { interval, timeLeft, running: true };
@@ -339,10 +348,10 @@ window.toggleConcluido = async function (nome, dia, index) {
 
     if (logs[dia].includes(nome)) {
         logs[dia] = logs[dia].filter(n => n !== nome);
-        card.classList.remove('completed-exercise');
+        if (card) card.classList.remove('completed-exercise');
     } else {
         logs[dia].push(nome);
-        card.classList.add('completed-exercise');
+        if (card) card.classList.add('completed-exercise');
     }
     localStorage.setItem(key, JSON.stringify(logs));
 

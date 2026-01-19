@@ -1,13 +1,13 @@
 
 import { db, auth } from './app_global.js';
-import { 
-    collection, 
-    query, 
-    where, 
-    getDocs, 
-    addDoc, 
-    updateDoc, 
-    deleteDoc, 
+import {
+    collection,
+    query,
+    where,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
     doc,
     getDoc
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
@@ -29,7 +29,7 @@ async function checkSuperAdmin() {
             const data = adminDoc.data();
             if (data.role !== "super_admin") {
                 // Se for admin comum tentando acessar, manda pro dashboard dele
-                window.location.href = "dashboard.html"; 
+                window.location.href = "dashboard.html";
             }
         } else {
             window.location.href = "../index.html";
@@ -62,22 +62,22 @@ async function loadTrainers() {
     try {
         const q = query(collection(db, "admins")); // Pega todos
         const querySnapshot = await getDocs(q);
-        
+
         tbody.innerHTML = '';
         let count = 0;
 
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            // Ignorar o próprio super admin na lista ou mostrar diferente
-            if (data.role === 'super_admin') return; 
+        for (const docSnapshot of querySnapshot.docs) {
+            const data = docSnapshot.data();
+            // Ignorar o próprio super admin na lista
+            if (data.role === 'super_admin') continue;
 
             count++;
-            
+
             // Verifica status da licença
             const isExpired = new Date(data.licenseExpiration) < new Date();
             let statusBadge = '';
             let statusText = '';
-            
+
             if (data.licenseActive === false) {
                 statusBadge = 'status-inactive';
                 statusText = 'Desativado';
@@ -89,6 +89,16 @@ async function loadTrainers() {
                 statusText = 'Ativa';
             }
 
+            // Contar alunos
+            let studentCount = 0;
+            try {
+                const qStudents = query(collection(db, "students"), where("trainerId", "==", docSnapshot.id));
+                const studentSnap = await getDocs(qStudents);
+                studentCount = studentSnap.size;
+            } catch (err) {
+                console.error("Erro ao contar alunos para " + data.username, err);
+            }
+
             const tr = document.createElement('tr');
             tr.className = 'trainer-row';
             tr.innerHTML = `
@@ -96,18 +106,18 @@ async function loadTrainers() {
                 <td>${data.username}</td>
                 <td><span class="status-badge ${statusBadge}">${statusText}</span></td>
                 <td>${formatDate(data.licenseExpiration)}</td>
-                <td>N/A</td> <!-- Futuro: Contar alunos -->
+                <td>${studentCount}</td>
                 <td class="text-end pe-4">
-                    <button class="action-btn me-2" onclick="editTrainer('${doc.id}')" title="Editar">
+                    <button class="action-btn me-2" onclick="editTrainer('${docSnapshot.id}')" title="Editar">
                         <i class="bi bi-pencil-square"></i>
                     </button>
-                    <!-- <button class="action-btn text-danger" onclick="deleteTrainer('${doc.id}')" title="Excluir">
+                    <!-- <button class="action-btn text-danger" onclick="deleteTrainer('${docSnapshot.id}')" title="Excluir">
                         <i class="bi bi-trash"></i>
                     </button> -->
                 </td>
             `;
             tbody.appendChild(tr);
-        });
+        }
 
         if (count === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Nenhum personal trainer cadastrado.</td></tr>';
@@ -184,7 +194,7 @@ async function saveTrainer() {
         const modalEl = document.getElementById('modalTrainer');
         const modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
-        
+
         loadTrainers();
         document.getElementById('trainerForm').reset();
         document.getElementById('trainerId').value = '';
@@ -199,12 +209,12 @@ async function saveTrainer() {
 }
 
 // Função Global para Editar (acessível pelo onclick no HTML)
-window.editTrainer = async function(id) {
+window.editTrainer = async function (id) {
     try {
         const docRef = await getDoc(doc(db, "admins", id));
         if (docRef.exists()) {
             const data = docRef.data();
-            
+
             document.getElementById('trainerId').value = docRef.id;
             document.getElementById('trainerName').value = data.name || '';
             document.getElementById('trainerUser').value = data.username || '';
@@ -213,7 +223,7 @@ window.editTrainer = async function(id) {
             document.getElementById('expirationDate').value = data.licenseExpiration || '';
 
             document.getElementById('modalTitle').innerText = "Editar Personal Trainer";
-            
+
             const modal = new bootstrap.Modal(document.getElementById('modalTrainer'));
             modal.show();
         }
