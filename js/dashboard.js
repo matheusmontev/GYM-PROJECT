@@ -14,7 +14,8 @@ import {
     deleteDoc,
     setDoc,
     query,
-    where
+    where,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 // Proteção: Verifica se o personal está realmente logado
@@ -90,6 +91,9 @@ function renderizarTabelaAlunos(lista) {
                     <div class="d-flex gap-2 flex-wrap">
                         <button class="btn btn-sm btn-primary" onclick="abrirEditor('${aluno.id}', '${aluno.name}')">
                             <i class="bi bi-journal-text me-1"></i> Treinos
+                        </button>
+                        <button class="btn btn-sm btn-info text-white" onclick="abrirHistoricoAluno('${aluno.id}', '${aluno.name}')">
+                            <i class="bi bi-calendar-check me-1"></i> Histórico
                         </button>
                         <button class="btn btn-sm btn-light border" onclick="abrirEdicaoAluno('${aluno.id}')">
                             <i class="bi bi-pencil me-1"></i> Editar
@@ -365,3 +369,124 @@ window.showToast = function (msg) {
 
 // Carregamento inicial da página
 window.carregarAlunos();
+
+// --- CALENDÁRIO COM EDICAO (TREINADOR) ---
+let currentCalendarDate = new Date();
+let selectedStudentForHistory = null;
+let selectedDayForStatus = null;
+
+window.abrirHistoricoAluno = function (id, nome) {
+    selectedStudentForHistory = id;
+    document.getElementById('histAlunoName').innerText = nome;
+    document.getElementById('modalHistorico').style.display = 'block';
+    renderCalendar();
+};
+
+window.fecharHistorico = function () {
+    document.getElementById('modalHistorico').style.display = 'none';
+    selectedStudentForHistory = null;
+};
+
+window.mudarMes = function (delta) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    renderCalendar();
+};
+
+async function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const monthYearLabel = document.getElementById('calendarMonthYear');
+    if (!grid || !selectedStudentForHistory) return;
+
+    grid.innerHTML = '<div class="d-flex justify-content-center w-100 py-3">Carregando...</div>';
+
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    monthYearLabel.innerText = `${monthNames[month]} ${year}`;
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const startStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const endStr = `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`;
+
+    let eventsMap = {};
+
+    // Fetch user events
+    try {
+        const q = query(
+            collection(db, "users", selectedStudentForHistory, "calendar_events"),
+            where("date", ">=", startStr),
+            where("date", "<=", endStr)
+        );
+        const sn = await getDocs(q);
+        sn.forEach(d => {
+            const dt = d.data();
+            eventsMap[dt.date] = dt.status;
+        });
+    } catch (e) {
+        console.error("Error reading student history", e);
+    }
+
+    grid.innerHTML = '';
+
+    // Empty initial days
+    for (let i = 0; i < firstDayIndex; i++) {
+        const d = document.createElement('div');
+        d.className = 'calendar-day empty';
+        grid.appendChild(d);
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        div.innerText = i;
+        if (dStr === todayStr) div.classList.add('today');
+
+        if (eventsMap[dStr]) div.classList.add(eventsMap[dStr]);
+
+        // Allow editing
+        div.onclick = () => abrirStatusModal(dStr);
+        grid.appendChild(div);
+    }
+}
+
+window.abrirStatusModal = function (dateStr) {
+    selectedDayForStatus = dateStr;
+    const [y, m, d] = dateStr.split('-');
+
+    document.getElementById('selectedDateTitle').innerText = `${d}/${m}/${y}`;
+    document.getElementById('statusModal').style.display = 'block';
+};
+
+window.fecharStatusModal = function () {
+    document.getElementById('statusModal').style.display = 'none';
+};
+
+window.definirStatus = async function (status) {
+    if (!selectedStudentForHistory || !selectedDayForStatus) return;
+
+    const docRef = doc(db, "users", selectedStudentForHistory, "calendar_events", selectedDayForStatus);
+
+    try {
+        if (status) {
+            await setDoc(docRef, {
+                date: selectedDayForStatus,
+                status: status,
+                updatedAt: serverTimestamp()
+            });
+        } else {
+            await deleteDoc(docRef);
+        }
+        fecharStatusModal();
+        renderCalendar();
+        showToast("Status atualizado!");
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao salvar status");
+    }
+};

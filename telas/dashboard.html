@@ -332,6 +332,69 @@
             </div>
         </div>
 
+        <!-- Modal: Histórico do Aluno (Calendário) -->
+        <div id="modalHistorico" class="modal" tabindex="-1" style="display: none; z-index: 1050;">
+            <div class="modal-content" style="max-width: 600px; margin: 10% auto;">
+                <div class="app-header"
+                    style="padding: 1rem; border-bottom: 1px solid var(--border); border-radius: 20px 20px 0 0; margin-bottom: 1rem;">
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <h4 style="margin:0;">Histórico: <span id="histAlunoName"
+                                style="color: var(--primary);">...</span></h4>
+                        <span class="close" onclick="fecharHistorico()">&times;</span>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <div class="calendar-wrapper">
+                        <div class="calendar-header">
+                            <button class="btn btn-sm btn-light" onclick="mudarMes(-1)"><i
+                                    class="bi bi-chevron-left"></i></button>
+                            <h4 id="calendarMonthYear" style="margin:0; font-size: 1.1rem;">Janeiro 2024</h4>
+                            <button class="btn btn-sm btn-light" onclick="mudarMes(1)"><i
+                                    class="bi bi-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <div>D</div>
+                            <div>S</div>
+                            <div>T</div>
+                            <div>Q</div>
+                            <div>Q</div>
+                            <div>S</div>
+                            <div>S</div>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid">
+                            <!-- JS Generates -->
+                        </div>
+                        <div class="calendar-legend mt-3">
+                            <div class="legend-item"><span class="dot train"></span> Treinou</div>
+                            <div class="legend-item"><span class="dot rest"></span> Descanso</div>
+                            <div class="legend-item"><span class="dot miss"></span> Falta</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Edição de Status do Dia (Treinador) -->
+        <div id="statusModal" class="modal" tabindex="-1"
+            style="display: none; z-index: 1060; background: rgba(0,0,0,0.5);">
+            <div class="modal-content" style="max-width: 300px; margin: 20% auto; padding: 1.5rem;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="modal-title" id="selectedDateTitle">Dia ...</h6>
+                    <button type="button" class="btn-close" onclick="fecharStatusModal()"></button>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success" onclick="definirStatus('trained')"><i
+                            class="bi bi-check-circle-fill me-2"></i>Confirmar Treino</button>
+                    <button class="btn btn-outline-info" onclick="definirStatus('rest')"><i
+                            class="bi bi-cup-hot-fill me-2"></i>Dia de Descanso</button>
+                    <button class="btn btn-outline-danger" onclick="definirStatus('missed')"><i
+                            class="bi bi-x-circle-fill me-2"></i>Marcar Falta</button>
+                    <button class="btn btn-light" onclick="definirStatus(null)">Limpar Status</button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <div id="toast">Operação concluída!</div>

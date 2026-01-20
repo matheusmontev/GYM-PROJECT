@@ -31,9 +31,31 @@ function getTodayDateString() {
 
 // Função para verificar se um exercício está concluído
 function isExCompleted(exerciseName, day) {
-    const today = getTodayDateString();
-    // progressoCache[day] é um array de strings com os nomes dos exercícios concluídos
+    // Agora progressoCache guarda o status da SEMANA
     return progressoCache[day] && Array.isArray(progressoCache[day]) && progressoCache[day].includes(exerciseName);
+}
+
+// Helper para calcular o momento do último reset (Domingo 22h)
+function getLastResetTime() {
+    const now = new Date();
+    const day = now.getDay(); // 0 = Domingo
+
+    // Começa com a data de hoje
+    let lastReset = new Date(now);
+
+    // Ajusta para o Domingo da semana atual (ou passada)
+    // Se hoje é Domingo (0), diff é 0.
+    const diff = day;
+    lastReset.setDate(now.getDate() - diff);
+    lastReset.setHours(22, 0, 0, 0); // Domingo 22:00
+
+    // Se o reset calculado está no futuro (ex: hoje é Domingo 10h, reset é hoje 22h),
+    // então o último reset válido foi o Domingo da semana anterior (-7 dias)
+    if (lastReset > now) {
+        lastReset.setDate(lastReset.getDate() - 7);
+    }
+
+    return lastReset;
 }
 
 window.carregarTreino = async function () {
@@ -79,64 +101,58 @@ window.carregarTreino = async function () {
             `;
         }
 
-        // --- CARREGA PROGRESSO DO CLOUD ---
-        const hoje = new Date().toISOString().split('T')[0];
-        const progSnap = await getDoc(doc(db, "progress", `${studentId}_${hoje}`));
+        // --- LÓGICA DE PROGRESSO SEMANAL ---
+        // Usa um documento fixo para "Status da Semana Atual"
+        const weekStatusId = `${studentId}_weekly_status`;
+        const progSnap = await getDoc(doc(db, "progress", weekStatusId));
+
+        let shouldReset = false;
+        let pData = {};
+
         if (progSnap.exists()) {
-            progressoCache = progSnap.data() || {};
-            // Atualiza a visualização se o progresso foi carregado depois do treino
-            const activeTab = document.querySelector('.day-tab.active');
-            if (activeTab) {
-                const diaDetectado = diasMap[new Date().getDay()]; // Simplificado
-                window.verDia(activeTab.textContent.toLowerCase().includes('seg') ? 'segunda' :
-                    activeTab.textContent.toLowerCase().includes('ter') ? 'terca' :
-                        activeTab.textContent.toLowerCase().includes('qua') ? 'quarta' :
-                            activeTab.textContent.toLowerCase().includes('qui') ? 'quinta' :
-                                activeTab.textContent.toLowerCase().includes('sex') ? 'sexta' :
-                                    activeTab.textContent.toLowerCase().includes('sab') ? 'sabado' : 'domingo', activeTab);
+            pData = progSnap.data();
+
+            // Verifica Reset Semanal
+            const lastUpdate = pData.updatedAt ? pData.updatedAt.toDate() : new Date(0);
+            const resetTime = getLastResetTime();
+
+            if (lastUpdate < resetTime) {
+                // Dados antigos (antes do último domingo 22h) -> Resetar
+                console.log("Reset Semanal Aplicado");
+                pData = { studentId: studentId, updatedAt: serverTimestamp() }; // Limpa ticks
+                shouldReset = true;
+
+                // Atualiza no banco para limpar
+                await setDoc(doc(db, "progress", weekStatusId), pData);
             }
         }
+
+        progressoCache = pData;
+
+        // Atualiza a visualização atual
+        const activeTab = document.querySelector('.day-tab.active');
+        if (activeTab) {
+            const map = { 'segunda': 'segunda', 'terça': 'terca', 'terca': 'terca', 'quarta': 'quarta', 'quinta': 'quinta', 'sexta': 'sexta', 'sábado': 'sabado', 'sabado': 'sabado', 'domingo': 'domingo' };
+            const txt = activeTab.textContent.toLowerCase().trim();
+            // Encontra a chave correta baseada no texto
+            let diaChave = Object.keys(map).find(k => txt.includes(k)) || 'segunda';
+            diaChave = map[diaChave];
+
+            window.verDia(diaChave, activeTab);
+        }
+
     } catch (e) {
         console.error("Erro ao carregar treino/progresso:", e);
 
-        // Exibe mensagem específica baseada no tipo de erro
         let errorMessage = '<i class="bi bi-exclamation-circle" style="font-size: 3rem; margin-bottom: 1rem; color: var(--danger);"></i>';
 
         if (e.code === 'permission-denied') {
-            errorMessage += `
-                <h3>Erro de Permissão</h3>
-                <p><strong>O acesso ao banco de dados foi bloqueado.</strong></p>
-                <p style="font-size: 0.9rem; color: var(--text-muted);">
-                    Isso pode ocorrer se o domínio não estiver autorizado no Firebase.<br>
-                    Entre em contato com o administrador do sistema.
-                </p>
-            `;
-        } else if (e.message.includes('auth/unauthorized-domain')) {
-            errorMessage += `
-                <h3>Domínio Não Autorizado</h3>
-                <p><strong>Este site precisa ser configurado no Firebase.</strong></p>
-                <p style="font-size: 0.9rem; color: var(--text-muted);">
-                    Código do erro: auth/unauthorized-domain
-                </p>
-            `;
+            errorMessage += `<h3>Erro de Permissão</h3><p>Verifique o acesso.</p>`;
         } else {
-            errorMessage += `
-                <h3>Erro de Conexão</h3>
-                <p>Não foi possível carregar seus treinos.</p>
-                <p style="font-size: 0.9rem; color: var(--text-muted);">
-                    ${e.message || 'Erro desconhecido'}
-                </p>
-            `;
+            errorMessage += `<h3>Erro de Conexão</h3><p>${e.message}</p>`;
         }
 
-        container.innerHTML = `
-            <div style="text-align: center; padding: 3rem;">
-                ${errorMessage}
-                <button onclick="window.carregarTreino()" class="btn btn-primary mt-3">
-                    <i class="bi bi-arrow-clockwise me-2"></i>Tentar Novamente
-                </button>
-            </div>
-        `;
+        container.innerHTML = `<div style="text-align: center; padding: 3rem;">${errorMessage}</div>`;
     }
 }
 
@@ -341,13 +357,12 @@ function tocarAlarme() {
 
 
 window.toggleConcluido = async function (nome, dia, index) {
-    const hoje = new Date().toISOString().split('T')[0];
-    const key = `progress_${studentId}_${hoje}`;
-    const docId = `${studentId}_${hoje}`;
+    const weekStatusId = `${studentId}_weekly_status`;
 
-    // 1. Atualiza LocalStorage (pelo menos mantém a funcionalidade offline imediata)
-    let logs = JSON.parse(localStorage.getItem(key) || '{}');
+    // 1. Atualiza Cache Local
+    let logs = progressoCache || {}; // Usa o cache centralizado
     if (!logs[dia]) logs[dia] = [];
+    if (!Array.isArray(logs[dia])) logs[dia] = [];
 
     const card = document.getElementById(`exercise-card-${index}`);
 
@@ -358,24 +373,22 @@ window.toggleConcluido = async function (nome, dia, index) {
         logs[dia].push(nome);
         if (card) card.classList.add('completed-exercise');
     }
-    localStorage.setItem(key, JSON.stringify(logs));
+
+    progressoCache = logs;
+
+    // Atualiza Visualização
+    window.verDia(dia, document.querySelector(`.day-tab.active`));
 
     // 2. Sincroniza com Cloud (Firestore)
-    progressoCache = logs; // Sincroniza cache local
-
     try {
-        await setDoc(doc(db, "progress", docId), {
+        await setDoc(doc(db, "progress", weekStatusId), {
             ...logs,
             studentId,
-            date: hoje,
             updatedAt: serverTimestamp()
         });
     } catch (e) {
         console.error("Erro ao sincronizar com nuvem:", e);
-        // Não alerta o usuário para não interromper o treino, mas o localStorage salvou.
     }
-
-    window.verDia(dia, document.querySelector(`.day-tab.active`));
 };
 
 window.carregarTreino();
@@ -406,17 +419,12 @@ async function renderCalendar() {
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
 
-    // Nome do Mês
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     monthYearLabel.innerText = `${monthNames[month]} ${year}`;
 
-    // Lógica de Dias
-    const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Domingo
+    const firstDayIndex = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Buscar dados do Firebase
-    // Range: from 1st to last day of month
-    // Format YYYY-MM-DD
     const startStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
     const endStr = `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`;
 
@@ -424,13 +432,6 @@ async function renderCalendar() {
 
     try {
         if (studentId) {
-            // Check collection "calendar_events" inside user doc
-            // NOTE: Using 'users' collection. Ensure this matches your DB structure. 
-            // Previous code used 'workouts' collection for training data. 
-            // If users are stored in 'users' collection with studentId, this works.
-            // If not, we might need to adjust. Assuming canonical /users/{uid} pattern.
-            // If studentId comes from workouts/ID, it is the ID.
-
             const q = query(
                 collection(db, "users", studentId, "calendar_events"),
                 where("date", ">=", startStr),
@@ -441,23 +442,22 @@ async function renderCalendar() {
                 const data = doc.data();
                 eventsMap[data.date] = data.status;
             });
+
+            await calculateAndShowStreak();
         }
     } catch (e) {
         console.error("Erro ao carregar calendário:", e);
-        // Fallback or silent fail
     }
 
     grid.innerHTML = '';
 
-    // Dias vazios no início
     for (let i = 0; i < firstDayIndex; i++) {
         const div = document.createElement('div');
         div.className = 'calendar-day empty';
         grid.appendChild(div);
     }
 
-    // Dias do mês
-    const todayStr = getTodayDateString(); // YYYY-MM-DD
+    const todayStr = getTodayDateString();
 
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -468,52 +468,89 @@ async function renderCalendar() {
         if (dateStr === todayStr) div.classList.add('today');
 
         if (eventsMap[dateStr]) {
-            div.classList.add(eventsMap[dateStr]); // 'trained', 'rest', 'missed'
+            div.classList.add(eventsMap[dateStr]);
         }
-
-        div.onclick = () => abrirStatusModal(dateStr, eventsMap[dateStr]);
+        // READ-ONLY for Student
         grid.appendChild(div);
     }
 }
 
-function abrirStatusModal(dateStr, currentStatus) {
-    selectedDayForStatus = dateStr;
-    const dateObj = new Date(dateStr + 'T12:00:00'); // Safe parsing workaround
-    const formattedDate = dateObj.toLocaleDateString('pt-BR');
+async function calculateAndShowStreak() {
+    try {
+        const q = query(collection(db, "users", studentId, "calendar_events"));
+        const snap = await getDocs(q);
 
-    document.getElementById('selectedDateTitle').innerText = `Dia ${formattedDate}`;
+        let dates = [];
+        snap.forEach(doc => {
+            dates.push({ date: doc.data().date, status: doc.data().status });
+        });
 
-    const modalEl = document.getElementById('statusModal');
-    if (!statusModalInstance) {
-        statusModalInstance = new bootstrap.Modal(modalEl);
+        // Sort descending
+        dates.sort((a, b) => b.date.localeCompare(a.date));
+
+        const todayStr = getTodayDateString();
+        let checkDate = new Date();
+        let loopLimit = 365;
+        let streakActive = true;
+        let currentStreak = 0;
+
+        for (let i = 0; i < loopLimit; i++) {
+            const dStr = checkDate.toISOString().split('T')[0];
+
+            // Skip future
+            if (dStr > todayStr) {
+                checkDate.setDate(checkDate.getDate() - 1);
+                continue;
+            }
+
+            const log = dates.find(l => l.date === dStr);
+
+            // Logic:
+            // If Missed -> Break
+            // If Empty in Past -> Break (assuming missing confirmation)
+            // If Rest -> Continue (don't break, don't add)
+            // If Trained -> Add
+
+            if (!log) {
+                if (dStr !== todayStr) {
+                    streakActive = false; // Gap breaks streak
+                }
+            } else {
+                if (log.status === 'trained') {
+                    if (streakActive) currentStreak++;
+                } else if (log.status === 'missed') {
+                    streakActive = false;
+                }
+                // Rest simply continues
+            }
+
+            if (!streakActive) break;
+            checkDate.setDate(checkDate.getDate() - 1);
+        }
+
+        // Max Streak Logic (Approximation based on history)
+        let maxStreak = 0;
+        let tempStreak = 0;
+
+        // Sort Ascending for Max Checking
+        const ascDates = [...dates].sort((a, b) => a.date.localeCompare(b.date));
+
+        // Simple scan for max consecutive 'trained' ignoring 'rest' gaps
+        // This is complex due to date gaps. 
+        // Allow simplified version: Max = Current Streak stored or just Current.
+        // For MVP, show Current as Record if it's high, or store it.
+        // We will just show Current Streak as Record if it's the highest calculation in this run???
+        // No, let's just make Record = Current Streak for now until we persist 'maxStreak' in user profile.
+        maxStreak = currentStreak;
+
+        document.getElementById('currentStreakValue').innerText = currentStreak;
+        document.getElementById('maxStreakValue').innerText = maxStreak;
+
+    } catch (e) {
+        console.log("Streak calc error", e);
     }
-    statusModalInstance.show();
 }
 
-window.definirStatus = async function (status) {
-    if (!selectedDayForStatus || !studentId) return;
-
-    if (statusModalInstance) statusModalInstance.hide();
-
-    const docRef = doc(db, "users", studentId, "calendar_events", selectedDayForStatus);
-
-    // UI Update - Show loading or just wait
-    // Let's add partial feedback or just re-render
-
-    try {
-        if (status) {
-            await setDoc(docRef, {
-                date: selectedDayForStatus,
-                status: status,
-                updatedAt: serverTimestamp()
-            });
-        } else {
-            // Limpar
-            await deleteDoc(docRef);
-        }
-        await renderCalendar();
-    } catch (e) {
-        console.error("Erro ao salvar status:", e);
-        alert("Erro ao salvar. Verifique se você tem permissão.");
-    }
-};
+// Disable writing functions
+window.definirStatus = function () { };
+window.abrirStatusModal = function () { };

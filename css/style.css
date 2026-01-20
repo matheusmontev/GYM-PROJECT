@@ -444,8 +444,8 @@ tr:hover td {
     color: var(--primary);
 }
 
-.calendar-day.trained.today, 
-.calendar-day.rest.today, 
+.calendar-day.trained.today,
+.calendar-day.rest.today,
 .calendar-day.missed.today {
     border: 2px solid white;
     color: white;
@@ -475,6 +475,72 @@ tr:hover td {
     display: inline-block;
 }
 
-.dot.train { background-color: var(--success); }
-.dot.rest { background-color: var(--secondary); }
-.dot.miss { background-color: var(--danger); }
+.dot.train {
+    background-color: var(--success);
+}
+
+.dot.rest {
+    background-color: var(--secondary);
+}
+
+.dot.miss {
+    background-color: var(--danger);
+}
+
+/* 14. Responsive Modal & Stats */
+.stats-card {
+    background: linear-gradient(135deg, #fff 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+    width: 100%;
+    text-align: center;
+}
+
+.stats-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.stats-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.modal-content {
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 1rem;
+        margin: 0.5rem;
+        width: auto;
+    }
+
+    .stats-value {
+        font-size: 1.4rem;
+    }
+
+    .stats-label {
+        font-size: 0.7rem;
+    }
+
+    .calendar-day {
+        font-size: 0.85rem;
+        border-radius: 8px;
+    }
+
+    .calendar-weekdays {
+        font-size: 0.75rem;
+    }
+}
