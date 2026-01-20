@@ -37,6 +37,10 @@ O GYM-PRO foi arquitetado para ser leve e escalável, eliminando dependências p
 ## 📈 Status do Projeto
 O sistema encontra-se na versão **quase completa**, com core business totalmente funcional e pronto para uso profissional.
 
+## 📚 Documentação Funcional
+Para entender como funciona o sistema de engajamento, dias consecutivos e regras de negócio:
+- **[Lógica de Ofensiva (Streak)](LOGICA_OFENSIVA.md)**
+
 ## 🗺️ Roadmap e Planos Futuros
 
 Para conhecer as funcionalidades planejadas e a evolução do projeto, consulte o **[ROADMAP.md](ROADMAP.md)**.
