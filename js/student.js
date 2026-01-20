@@ -25,9 +25,8 @@ let treinoCache = {};
 let progressoCache = {}; // Cache local para evitar múltiplas leituras
 
 // Helper para obter a data de hoje no formato YYYY-MM-DD
-function getTodayDateString() {
-    return new Date().toISOString().split('T')[0];
-}
+// Usando window.getTodayDateString() do app_global.js
+
 
 // Função para verificar se um exercício está concluído
 function isExCompleted(exerciseName, day) {
@@ -457,7 +456,7 @@ async function renderCalendar() {
         grid.appendChild(div);
     }
 
-    const todayStr = getTodayDateString();
+    const todayStr = window.getTodayDateString();
 
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -480,68 +479,13 @@ async function calculateAndShowStreak() {
         const q = query(collection(db, "users", studentId, "calendar_events"));
         const snap = await getDocs(q);
 
-        let dates = [];
+        let eventsList = [];
         snap.forEach(doc => {
-            dates.push({ date: doc.data().date, status: doc.data().status });
+            eventsList.push({ date: doc.data().date, status: doc.data().status });
         });
 
-        // Sort descending
-        dates.sort((a, b) => b.date.localeCompare(a.date));
-
-        const todayStr = getTodayDateString();
-        let checkDate = new Date();
-        let loopLimit = 365;
-        let streakActive = true;
-        let currentStreak = 0;
-
-        for (let i = 0; i < loopLimit; i++) {
-            const dStr = checkDate.toISOString().split('T')[0];
-
-            // Skip future
-            if (dStr > todayStr) {
-                checkDate.setDate(checkDate.getDate() - 1);
-                continue;
-            }
-
-            const log = dates.find(l => l.date === dStr);
-
-            // Logic:
-            // If Missed -> Break
-            // If Empty in Past -> Break (assuming missing confirmation)
-            // If Rest -> Continue (don't break, don't add)
-            // If Trained -> Add
-
-            if (!log) {
-                if (dStr !== todayStr) {
-                    streakActive = false; // Gap breaks streak
-                }
-            } else {
-                if (log.status === 'trained') {
-                    if (streakActive) currentStreak++;
-                } else if (log.status === 'missed') {
-                    streakActive = false;
-                }
-                // Rest simply continues
-            }
-
-            if (!streakActive) break;
-            checkDate.setDate(checkDate.getDate() - 1);
-        }
-
-        // Max Streak Logic (Approximation based on history)
-        let maxStreak = 0;
-        let tempStreak = 0;
-
-        // Sort Ascending for Max Checking
-        const ascDates = [...dates].sort((a, b) => a.date.localeCompare(b.date));
-
-        // Simple scan for max consecutive 'trained' ignoring 'rest' gaps
-        // This is complex due to date gaps. 
-        // Allow simplified version: Max = Current Streak stored or just Current.
-        // For MVP, show Current as Record if it's high, or store it.
-        // We will just show Current Streak as Record if it's the highest calculation in this run???
-        // No, let's just make Record = Current Streak for now until we persist 'maxStreak' in user profile.
-        maxStreak = currentStreak;
+        // Usa a função compartilhada (definida no app_global.js)
+        const { currentStreak, maxStreak } = window.calculateStreak(eventsList);
 
         document.getElementById('currentStreakValue').innerText = currentStreak;
         document.getElementById('maxStreakValue').innerText = maxStreak;

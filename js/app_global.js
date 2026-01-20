@@ -190,3 +190,105 @@ window.verificarAuthAluno = function () {
 
 // Exporta para uso em outros módulos se necessário
 export { auth, db };
+
+/**
+ * Utilitário para formatar data de hoje (YYYY-MM-DD)
+ * @returns {string} Data formata
+ */
+window.getTodayDateString = function() {
+    return new Date().toISOString().split('T')[0];
+};
+
+/**
+ * Função Compartilhada para Calcular Ofensiva (Streak)
+ * @param {string} studentId - ID do aluno
+ * @param {Array} eventsList - Lista de eventos {date: 'YYYY-MM-DD', status: 'trained'|'missed'|'rest'}
+ * @returns {Object} { currentStreak: number, maxStreak: number }
+ */
+window.calculateStreak = function(eventsList) {
+    if (!eventsList || eventsList.length === 0) return { currentStreak: 0, maxStreak: 0 };
+
+    // 1. Ordenar por data decrescente (mais recente primeiro)
+    const datesDesc = [...eventsList].sort((a, b) => b.date.localeCompare(a.date));
+
+    const todayStr = window.getTodayDateString();
+    let checkDate = new Date();
+    let loopLimit = 365; // Limite de 1 ano para trás
+    let streakActive = true;
+    let currentStreak = 0;
+
+    // --- Cálculo da Ofensiva Atual ---
+    for (let i = 0; i < loopLimit; i++) {
+        const dStr = checkDate.toISOString().split('T')[0];
+
+        // Pular dias futuros
+        if (dStr > todayStr) {
+            checkDate.setDate(checkDate.getDate() - 1);
+            continue;
+        }
+
+        const log = datesDesc.find(l => l.date === dStr);
+
+        if (!log) {
+            // Se checando hoje e não tem log, a ofensiva pode estar ativa de ontem.
+            // Se checando passado e não tem log -> Quebra a ofensiva (buraco)
+            if (dStr !== todayStr) {
+                streakActive = false;
+            }
+        } else {
+            if (log.status === 'trained') {
+                if (streakActive) currentStreak++;
+            } else if (log.status === 'missed') {
+                streakActive = false;
+            }
+            // 'rest' -> mantém a ofensiva ativa mas não incrementa
+        }
+
+        if (!streakActive) break;
+        checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    // --- Cálculo da Melhor Ofensiva (Recorde) ---
+    // Estratégia simples: Por enquanto o recorde é a maior sequência contínua encontrada no histórico
+    let maxStreak = 0;
+    
+    // Ordenar Ascendente (antigo -> novo) para varredura sequencial
+    const datesAsc = [...eventsList].sort((a, b) => a.date.localeCompare(b.date));
+
+    // Varredura linear
+    if (datesAsc.length > 0) {
+        let tempStreak = 0;
+        let firstDate = new Date(datesAsc[0].date);
+        let lastDate = new Date(); // Até hoje
+        
+        let scanDate = new Date(firstDate);
+        
+        // Mapa para acesso rápido O(1)
+        const eventsMap = {};
+        datesAsc.forEach(e => eventsMap[e.date] = e.status);
+
+        while (scanDate <= lastDate) {
+            const sStr = scanDate.toISOString().split('T')[0];
+            const status = eventsMap[sStr];
+
+            if (status === 'trained') {
+                tempStreak++;
+            } else if (status === 'rest') {
+                // Descanso não quebra, mas não soma
+            } else {
+                // Falta ou Buraco -> Quebra e reseta
+                if (tempStreak > maxStreak) maxStreak = tempStreak;
+                tempStreak = 0;
+            }
+            
+            scanDate.setDate(scanDate.getDate() + 1);
+        }
+        // Checagem final
+        if (tempStreak > maxStreak) maxStreak = tempStreak;
+    }
+
+    // Fallback: Se o streak atual for maior que o histórico calculado (bordas), usa o atual
+    if (currentStreak > maxStreak) maxStreak = currentStreak;
+
+    return { currentStreak, maxStreak };
+};

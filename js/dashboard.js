@@ -499,106 +499,19 @@ async function calculateStreakForTrainer(studentId) {
     if (!studentId) return;
 
     try {
-        // Fetch ALL events to calculate record and streak
+        // Busca TODOS os eventos para calcular recorde e atual
         const q = query(collection(db, "users", studentId, "calendar_events"));
         const snap = await getDocs(q);
 
-        let dates = [];
+        let eventsList = [];
         snap.forEach(doc => {
-            dates.push({ date: doc.data().date, status: doc.data().status });
+            eventsList.push({ date: doc.data().date, status: doc.data().status });
         });
 
-        // Sort descending
-        dates.sort((a, b) => b.date.localeCompare(a.date));
+        // Usa a função compartilhada (definida no app_global.js)
+        const { currentStreak, maxStreak } = window.calculateStreak(eventsList);
 
-        const todayStr = new Date().toISOString().split('T')[0];
-        let checkDate = new Date(); // Start from today
-        let loopLimit = 365; // Check last year effectively
-        let streakActive = true;
-        let currentStreak = 0;
-
-        // --- Current Streak Calculation ---
-        for (let i = 0; i < loopLimit; i++) {
-            const dStr = checkDate.toISOString().split('T')[0];
-
-            // Skip future days if calendar has them
-            if (dStr > todayStr) {
-                checkDate.setDate(checkDate.getDate() - 1);
-                continue;
-            }
-
-            const log = dates.find(l => l.date === dStr);
-
-            if (!log) {
-                // If checking today and no log, streak might still be active from yesterday
-                // If checking past day and no log -> Break
-                if (dStr !== todayStr) {
-                    streakActive = false;
-                }
-            } else {
-                if (log.status === 'trained') {
-                    if (streakActive) currentStreak++;
-                } else if (log.status === 'missed') {
-                    streakActive = false;
-                }
-                // 'rest' -> keeps streak active but doesn't increment
-            }
-
-            if (!streakActive) break;
-            checkDate.setDate(checkDate.getDate() - 1);
-        }
-
-        // --- Max Streak (Simple Calculation) ---
-        // For now, we assume Max Streak is either the Current Streak
-        // OR we would need to iterate properly through history.
-        // Let's implement full scan
-        let maxStreak = 0;
-        let tempStreak = 0;
-
-        // Sort Ascending for sequential scan
-        const ascDates = [...dates].sort((a, b) => a.date.localeCompare(b.date));
-
-        // Simplified Logic:
-        // Iterate days from first registered day to today?
-        // Better: Iterate through SORTED events, filling in gaps?
-        // Gaps without events = Break? Yes.
-
-        if (ascDates.length > 0) {
-            let prevDate = null;
-
-            // We need to iterate chronologically day by day from first event
-            if (ascDates.length > 0) {
-                const first = new Date(ascDates[0].date);
-                const last = new Date();
-
-                let scanDate = new Date(first);
-                tempStreak = 0;
-
-                while (scanDate <= last) {
-                    const sStr = scanDate.toISOString().split('T')[0];
-                    const ev = eventsMapFromList(ascDates, sStr); // Helper needed or just find
-
-                    if (ev === 'trained') {
-                        tempStreak++;
-                    } else if (ev === 'rest') {
-                        // Maintain tempStreak
-                    } else {
-                        // Missed or Gap
-                        if (tempStreak > maxStreak) maxStreak = tempStreak;
-                        tempStreak = 0;
-                    }
-
-                    scanDate.setDate(scanDate.getDate() + 1);
-                }
-                // Final check
-                if (tempStreak > maxStreak) maxStreak = tempStreak;
-            }
-        }
-
-        // Fallback: Max cannot be less than current
-        if (currentStreak > maxStreak) maxStreak = currentStreak;
-
-        // Update UI
+        // Atualiza a UI
         const elCurr = document.getElementById('trainerCurrentStreak');
         const elMax = document.getElementById('trainerMaxStreak');
 

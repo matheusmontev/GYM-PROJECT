@@ -1,0 +1,44 @@
+/**
+ * MODULE: VARIABLES
+ * Contains all design tokens, colors, fonts, and global variables.
+ */
+
+/* 1. Importação de Fontes Premium */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+    /* Paleta de Cores Premium */
+    --primary: #6366f1;         /* Electric Indigo */
+    --primary-dark: #4f46e5;
+    --primary-light: #818cf8;
+
+    --secondary: #0ea5e9;       /* Sky Blue */
+    --success: #10b981;
+    --danger: #f43f5e;
+    --warning: #f59e0b;
+
+    --text-dark: #0f172a;       /* Slate 900 */
+    --text-main: #334155;       /* Slate 700 */
+    --text-muted: #64748b;      /* Slate 500 */
+
+    --bg-main: #f8fafc;
+    --white: #ffffff;
+    --border: rgba(226, 232, 240, 0.8);
+
+    /* Glassmorphism Tokens */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-blur: blur(12px);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+    /* Border Radius */
+    --radius: 16px;
+
+    /* Typography */
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+}
