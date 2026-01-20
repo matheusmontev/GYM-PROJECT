@@ -64,13 +64,9 @@ Este documento apresenta o planejamento de evolução do GYM-PRO, organizado por
 **Impacto:** Alto - Aumenta engajamento e motivação
 
 **Funcionalidades:**
-- Calendário visual com dias que treinou
-- Estatísticas semanais/mensais (% de conclusão)
-- Gráficos de consistência
-- Sistema de Streak (dias consecutivos)
-- Badge de conquistas (7 dias seguidos, 30 dias, etc)
-- Comparação mês a mês
-
+- Calendário visual com dias que treinou ✅
+- Gráficos de consistência 
+- Sistema de Streak (dias consecutivos) ✅
 ---
 
 ## 📋 Fase 2: Produtividade e UX (Q2 2026)
@@ -84,22 +80,6 @@ Este documento apresenta o planejamento de evolução do GYM-PRO, organizado por
 - Banco de dados de exercícios pré-cadastrados
 - Categorização por grupo muscular
 - Busca e filtros avançados
-- Treinador pode criar templates de treino
-- Copiar treino de um aluno para outro
-- Importar/exportar templates
-
----
-
-### 🟠 P6 - Drag & Drop para Reordenar Exercícios
-**Prioridade:** ALTA  
-**Estimativa:** 5-7 dias  
-**Impacto:** Médio - Melhora UX do treinador
-
-**Funcionalidades:**
-- Arrastar exercícios para reordenar
-- Feedback visual durante drag
-- Funciona em mobile (touch)
-- Desfazer/refazer alterações
 
 ---
 
