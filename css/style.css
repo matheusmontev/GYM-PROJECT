@@ -362,3 +362,119 @@ tr:hover td {
         opacity: 0;
     }
 }
+
+/* 13. Calendar Styles */
+.calendar-wrapper {
+    padding: 0.5rem;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    color: var(--text-main);
+}
+
+.calendar-day:hover:not(.empty) {
+    background-color: #f1f5f9;
+    transform: scale(1.1);
+}
+
+.calendar-day.empty {
+    background: none;
+    cursor: default;
+}
+
+/* Status Colors */
+.calendar-day.trained {
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    border: none;
+}
+
+.calendar-day.rest {
+    background: linear-gradient(135deg, var(--secondary) 0%, #0284c7 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+    border: none;
+}
+
+.calendar-day.missed {
+    background: linear-gradient(135deg, var(--danger) 0%, #e11d48 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(244, 63, 94, 0.3);
+    border: none;
+}
+
+.calendar-day.today {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.calendar-day.trained.today, 
+.calendar-day.rest.today, 
+.calendar-day.missed.today {
+    border: 2px solid white;
+    color: white;
+}
+
+.calendar-legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.dot.train { background-color: var(--success); }
+.dot.rest { background-color: var(--secondary); }
+.dot.miss { background-color: var(--danger); }

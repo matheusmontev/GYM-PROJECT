@@ -8,7 +8,12 @@ import {
     getDoc,
     setDoc,
     updateDoc,
-    serverTimestamp
+    serverTimestamp,
+    collection,
+    query,
+    where,
+    getDocs,
+    deleteDoc
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 window.verificarAuthAluno();
@@ -374,3 +379,141 @@ window.toggleConcluido = async function (nome, dia, index) {
 };
 
 window.carregarTreino();
+
+// --- CALENDARIO & HISTORICO ---
+let currentCalendarDate = new Date();
+let selectedDayForStatus = null;
+let statusModalInstance = null;
+
+window.abrirHistorico = function () {
+    const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+    historyModal.show();
+    setTimeout(() => renderCalendar(), 200); // Delay para garantir que modal abriu
+};
+
+window.mudarMes = function (delta) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    renderCalendar();
+};
+
+async function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const monthYearLabel = document.getElementById('calendarMonthYear');
+    if (!grid) return;
+
+    grid.innerHTML = '<div class="d-flex justify-content-center w-100 py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+
+    // Nome do Mês
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    monthYearLabel.innerText = `${monthNames[month]} ${year}`;
+
+    // Lógica de Dias
+    const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Domingo
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Buscar dados do Firebase
+    // Range: from 1st to last day of month
+    // Format YYYY-MM-DD
+    const startStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const endStr = `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`;
+
+    let eventsMap = {};
+
+    try {
+        if (studentId) {
+            // Check collection "calendar_events" inside user doc
+            // NOTE: Using 'users' collection. Ensure this matches your DB structure. 
+            // Previous code used 'workouts' collection for training data. 
+            // If users are stored in 'users' collection with studentId, this works.
+            // If not, we might need to adjust. Assuming canonical /users/{uid} pattern.
+            // If studentId comes from workouts/ID, it is the ID.
+
+            const q = query(
+                collection(db, "users", studentId, "calendar_events"),
+                where("date", ">=", startStr),
+                where("date", "<=", endStr)
+            );
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                eventsMap[data.date] = data.status;
+            });
+        }
+    } catch (e) {
+        console.error("Erro ao carregar calendário:", e);
+        // Fallback or silent fail
+    }
+
+    grid.innerHTML = '';
+
+    // Dias vazios no início
+    for (let i = 0; i < firstDayIndex; i++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day empty';
+        grid.appendChild(div);
+    }
+
+    // Dias do mês
+    const todayStr = getTodayDateString(); // YYYY-MM-DD
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        div.innerText = day;
+
+        if (dateStr === todayStr) div.classList.add('today');
+
+        if (eventsMap[dateStr]) {
+            div.classList.add(eventsMap[dateStr]); // 'trained', 'rest', 'missed'
+        }
+
+        div.onclick = () => abrirStatusModal(dateStr, eventsMap[dateStr]);
+        grid.appendChild(div);
+    }
+}
+
+function abrirStatusModal(dateStr, currentStatus) {
+    selectedDayForStatus = dateStr;
+    const dateObj = new Date(dateStr + 'T12:00:00'); // Safe parsing workaround
+    const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+    document.getElementById('selectedDateTitle').innerText = `Dia ${formattedDate}`;
+
+    const modalEl = document.getElementById('statusModal');
+    if (!statusModalInstance) {
+        statusModalInstance = new bootstrap.Modal(modalEl);
+    }
+    statusModalInstance.show();
+}
+
+window.definirStatus = async function (status) {
+    if (!selectedDayForStatus || !studentId) return;
+
+    if (statusModalInstance) statusModalInstance.hide();
+
+    const docRef = doc(db, "users", studentId, "calendar_events", selectedDayForStatus);
+
+    // UI Update - Show loading or just wait
+    // Let's add partial feedback or just re-render
+
+    try {
+        if (status) {
+            await setDoc(docRef, {
+                date: selectedDayForStatus,
+                status: status,
+                updatedAt: serverTimestamp()
+            });
+        } else {
+            // Limpar
+            await deleteDoc(docRef);
+        }
+        await renderCalendar();
+    } catch (e) {
+        console.error("Erro ao salvar status:", e);
+        alert("Erro ao salvar. Verifique se você tem permissão.");
+    }
+};
