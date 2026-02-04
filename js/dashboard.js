@@ -274,13 +274,16 @@ function renderizarDia() {
                 <div class="small fw-bold text-primary text-uppercase">
                     <i class="bi bi-collection me-1"></i> #${index + 1} - Exercício
                 </div>
+                <button onclick="abrirBiblioteca(${index})" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem;">
+                    <i class="bi bi-search me-1"></i> Biblioteca
+                </button>
             </div>
             <div class="exercise-inputs" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                 <div>
                     <label class="form-label small fw-bold text-muted text-uppercase mb-1">Nome do Exercício</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white"><i class="bi bi-activity text-primary"></i></span>
-                        <input type="text" class="form-control" value="${ex.name}" placeholder="Ex: Supino Reto" onchange="updateEx(${index}, 'name', this.value)">
+                        <input type="text" id="ex-name-${index}" class="form-control" value="${ex.name}" placeholder="Ex: Supino Reto" onchange="updateEx(${index}, 'name', this.value)">
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
@@ -312,14 +315,14 @@ function renderizarDia() {
                     <label class="form-label small fw-bold text-muted text-uppercase mb-1">Vídeo (YouTube)</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white"><i class="bi bi-play-circle text-primary"></i></span>
-                        <input type="text" class="form-control" value="${ex.videoLink || ''}" placeholder="Link do vídeo" onchange="updateEx(${index}, 'videoLink', this.value)">
+                        <input type="text" id="ex-video-${index}" class="form-control" value="${ex.videoLink || ''}" placeholder="Link do vídeo" onchange="updateEx(${index}, 'videoLink', this.value)">
                     </div>
                 </div>
                 <div>
                     <label class="form-label small fw-bold text-muted text-uppercase mb-1">Foto (URL)</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white"><i class="bi bi-image text-primary"></i></span>
-                        <input type="text" class="form-control" value="${ex.photoLink || ''}" placeholder="Link da imagem" onchange="updateEx(${index}, 'photoLink', this.value)">
+                        <input type="text" id="ex-photo-${index}" class="form-control" value="${ex.photoLink || ''}" placeholder="Link da imagem" onchange="updateEx(${index}, 'photoLink', this.value)">
                     </div>
                 </div>
                 <button class="btn btn-sm btn-outline-danger w-100 mt-2 py-2" onclick="removeEx(${index})">
@@ -523,7 +526,113 @@ async function calculateStreakForTrainer(studentId) {
     }
 }
 
-function eventsMapFromList(list, dateStr) {
-    const item = list.find(x => x.date === dateStr);
-    return item ? item.status : null;
+// --- INTEGRAÇÃO BIBLIOTECA DE EXERCÍCIOS ---
+let bibliotecaCache = [];
+let indexExercicioEdicao = null;
+
+window.abrirBiblioteca = async function (index) {
+    indexExercicioEdicao = index;
+    document.getElementById('modalBiblioteca').style.display = 'block';
+
+    if (bibliotecaCache.length === 0) {
+        await carregarBiblioteca();
+    } else {
+        renderizarBiblioteca(bibliotecaCache);
+    }
+};
+
+window.fecharBiblioteca = function () {
+    document.getElementById('modalBiblioteca').style.display = 'none';
+};
+
+async function carregarBiblioteca() {
+    const trainerId = sessionStorage.getItem("adminId");
+    const container = document.getElementById('listaBiblioteca');
+    container.innerHTML = '<div class="text-center w-100 p-4">Carregando...</div>';
+
+    try {
+        const q = query(collection(db, "exercises"), where("trainerId", "==", trainerId));
+        const snap = await getDocs(q);
+        bibliotecaCache = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderizarBiblioteca(bibliotecaCache);
+    } catch (e) {
+        console.error("Erro biblioteca:", e);
+        container.innerHTML = '<div class="text-center w-100 p-4 text-danger">Erro ao carregar biblioteca.</div>';
+    }
 }
+
+function renderizarBiblioteca(lista) {
+    const container = document.getElementById('listaBiblioteca');
+    container.innerHTML = '';
+
+    if (lista.length === 0) {
+        container.innerHTML = '<div class="text-center w-100 p-4 text-muted">Nenhum exercício encontrado na biblioteca.</div>';
+        return;
+    }
+
+    lista.forEach(ex => {
+        const item = document.createElement('div');
+        item.className = 'biblioteca-item';
+        item.onclick = () => selecionarDaBiblioteca(ex);
+
+        const imgUrl = ex.urlImagem || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=200&auto=format&fit=crop';
+
+        item.innerHTML = `
+            <div style="position: relative; height: 120px; overflow: hidden;">
+                <div class="category-badge" style="top: 0.5rem; left: 0.5rem; font-size: 0.6rem; padding: 0.2rem 0.5rem; border-radius: 6px;">${ex.categoria}</div>
+                <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+                ${ex.urlVideo ? '<div class="video-badge" style="width: 24px; height: 24px; bottom: 0.5rem; right: 0.5rem;"><i class="bi bi-play-fill" style="font-size: 0.8rem;"></i></div>' : ''}
+            </div>
+            <div style="padding: 1rem;">
+                <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.25rem;">${ex.name || ex.nome}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">${ex.descricao || 'Sem descrição.'}</div>
+            </div>
+        `;
+
+        const img = item.querySelector('img');
+        item.onmouseover = () => {
+            img.style.transform = 'scale(1.1)';
+            item.style.borderColor = 'var(--primary)';
+        };
+        item.onmouseout = () => {
+            img.style.transform = 'scale(1)';
+            item.style.borderColor = 'var(--border)';
+        };
+
+        container.appendChild(item);
+    });
+}
+
+window.filtrarBiblioteca = function () {
+    const busca = document.getElementById('buscaBiblioteca').value.toLowerCase();
+    const cat = document.getElementById('filtroCatBiblioteca').value;
+
+    const filtrados = bibliotecaCache.filter(ex => {
+        const matchesBusca = ex.nome.toLowerCase().includes(busca);
+        const matchesCat = !cat || ex.categoria === cat;
+        return matchesBusca && matchesCat;
+    });
+
+    renderizarBiblioteca(filtrados);
+};
+
+window.selecionarDaBiblioteca = function (ex) {
+    if (indexExercicioEdicao === null) return;
+
+    // Atualiza no cache
+    treinoCache[diaAtual][indexExercicioEdicao].name = ex.nome;
+    treinoCache[diaAtual][indexExercicioEdicao].videoLink = ex.urlVideo || '';
+    treinoCache[diaAtual][indexExercicioEdicao].photoLink = ex.urlImagem || '';
+
+    // Atualiza nos inputs da tela diretamente para feedback imediato
+    const nameInput = document.getElementById(`ex-name-${indexExercicioEdicao}`);
+    const videoInput = document.getElementById(`ex-video-${indexExercicioEdicao}`);
+    const photoInput = document.getElementById(`ex-photo-${indexExercicioEdicao}`);
+
+    if (nameInput) nameInput.value = ex.nome;
+    if (videoInput) videoInput.value = ex.urlVideo || '';
+    if (photoInput) photoInput.value = ex.urlImagem || '';
+
+    fecharBiblioteca();
+    showToast("Exercício importado! 📚");
+};

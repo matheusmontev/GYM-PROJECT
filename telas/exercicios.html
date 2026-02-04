@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca de Exercícios - Personal</title>
+    <!-- Importação do Bootstrap 5 e Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS Global -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Scripts Globais (Firebase Modular) -->
+    <script type="module" src="../js/app_global.js?v=2"></script>
+    <script type="module" src="../js/exercicios.js?v=1"></script>
+
+</head>
+
+<body>
+
+    <header class="container">
+        <div class="app-header" style="flex-wrap: wrap; gap: 1rem;">
+            <div style="flex: 1; min-width: 200px;">
+                <h1 style="color: var(--primary); font-size: 1.5rem; margin-bottom: 0;">Biblioteca <span
+                        style="font-weight: 300; color: var(--text-dark);">Exercícios</span></h1>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">Gerencie sua base de treinos.
+                </p>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items: center;">
+                <button onclick="window.fazerLogout()" class="btn btn-danger btn-sm">Sair</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Navegação de Abas -->
+        <div class="nav-tabs-custom" id="navTabs">
+            <a href="dashboard.html" class="nav-link-custom"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+            <a href="exercicios.html" class="nav-link-custom active"><i class="bi bi-collection me-1"></i>
+                Exercícios</a>
+        </div>
+
+        <div class="card" style="padding: 1.25rem;">
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="d-flex gap-2">
+                    <div class="input-group" style="flex-grow: 1;">
+                        <span class="input-group-text bg-white border-end-0"><i
+                                class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="inputBusca" class="form-control border-start-0" placeholder="Buscar..."
+                            onkeyup="window.filtrarExercicios()">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; width: 100%;">
+                    <select id="filtroCategoria" class="form-select" style="flex: 1;"
+                        onchange="window.filtrarExercicios()">
+                        <option value="">Categorias</option>
+                        <option value="Peito">Peito</option>
+                        <option value="Costas">Costas</option>
+                        <option value="Pernas">Pernas</option>
+                        <option value="Ombros">Ombros</option>
+                        <option value="Braços">Braços</option>
+                        <option value="Abdominais">Abdominais</option>
+                        <option value="Aeróbico">Aeróbico</option>
+                        <option value="Alongamento">Alongamento</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+
+                    <a href="novo-exercicio.html" class="btn btn-primary" style="flex-shrink: 0; padding: 0.6rem 1rem;">
+                        <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline">Novo</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Grid de Exercícios -->
+            <div id="exerciseGrid" class="exercise-grid">
+                <!-- JS Renderiza Aqui -->
+                <div class="text-center py-5 w-100" id="loadingState">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Carregando biblioteca...</p>
+                </div>
+            </div>
+
+            <div id="emptyState" class="text-center py-5" style="display: none;">
+                <i class="bi bi-clipboard-x" style="font-size: 3rem; color: var(--text-muted);"></i>
+                <p class="mt-3 text-muted">Nenhum exercício encontrado.</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast">Operação concluída!</div>
+
+    <script>
+        // Pequeno ajuste para mostrar link financeiro se for super admin
+        if (sessionStorage.getItem("isSuperAdmin") === "true") {
+            const linkFin = document.getElementById('linkFinanceiro');
+            if (linkFin) linkFin.style.display = 'block';
+        }
+    </script>
+
+</body>
+
+</html>

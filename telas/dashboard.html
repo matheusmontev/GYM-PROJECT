@@ -190,6 +190,21 @@
 
     <main class="container">
 
+        <!-- Navegação de Abas -->
+        <div class="nav-tabs-custom" id="navTabs">
+            <a href="dashboard.html" class="nav-link-custom active"><i class="bi bi-speedometer2 me-1"></i>
+                Dashboard</a>
+            <a href="exercicios.html" class="nav-link-custom"><i class="bi bi-collection me-1"></i> Exercícios</a>
+            <a href="admin_license.html" id="linkFinanceiro" class="nav-link-custom" style="display: none;"><i
+                    class="bi bi-cash-stack me-1"></i> Financeiro</a>
+        </div>
+        <script>
+            if (sessionStorage.getItem("isSuperAdmin") === "true") {
+                const linkFin = document.getElementById('linkFinanceiro');
+                if (linkFin) linkFin.style.display = 'block';
+            }
+        </script>
+
         <!-- Seção: Gerenciamento de Alunos -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
@@ -411,6 +426,40 @@
             </div>
         </div>
 
+        <!-- Modal: Selecionar da Biblioteca -->
+        <div id="modalBiblioteca" class="modal" tabindex="-1" style="display: none; z-index: 1100;">
+            <div class="modal-content" style="max-width: 800px; margin: 5% auto;">
+                <span class="close" onclick="fecharBiblioteca()">&times;</span>
+                <h3>Selecionar da Biblioteca</h3>
+                <p class="text-muted small mb-4">Escolha um exercício para importar para o treino.</p>
+
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <input type="text" id="buscaBiblioteca" class="form-control" placeholder="Buscar por nome..."
+                            onkeyup="filtrarBiblioteca()">
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filtroCatBiblioteca" class="form-select" onchange="filtrarBiblioteca()">
+                            <option value="">Todas as Categorias</option>
+                            <option value="Peito">Peito</option>
+                            <option value="Costas">Costas</option>
+                            <option value="Pernas">Pernas</option>
+                            <option value="Ombros">Ombros</option>
+                            <option value="Braços">Braços</option>
+                            <option value="Abdominais">Abdominais</option>
+                            <option value="Aeróbico">Aeróbico</option>
+                            <option value="Alongamento">Alongamento</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="listaBiblioteca"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; max-height: 400px; overflow-y: auto;">
+                    <!-- JS Renderiza -->
+                </div>
+            </div>
+        </div>
     </main>
 
     <div id="toast">Operação concluída!</div>
