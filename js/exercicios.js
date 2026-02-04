@@ -127,7 +127,6 @@ function renderizarExercicios(lista) {
             </div>
             <div class="exercise-info">
                 <div class="exercise-name">${ex.nome}</div>
-                <div class="exercise-desc">${ex.descricao || 'Sem descrição disponível.'}</div>
             </div>
             <div class="exercise-actions">
                 <button onclick="window.abrirModalExercicio('${ex.id}')" class="btn btn-light btn-icon-sm border" title="Editar">
@@ -136,9 +135,6 @@ function renderizarExercicios(lista) {
                 <button onclick="window.excluirExercicio('${ex.id}')" class="btn btn-light btn-icon-sm border" title="Excluir">
                     <i class="bi bi-trash3 text-danger"></i>
                 </button>
-                <div style="margin-left: auto;">
-                    <span class="badge bg-light text-primary border" style="font-size: 0.65rem;">ID: ${ex.id.substring(0, 5)}</span>
-                </div>
             </div>
         `;
         grid.appendChild(card);

@@ -89,7 +89,7 @@ function renderizarTabelaAlunos(lista) {
                 <div class="student-cell">
                     <div class="student-name fw-medium mb-2">${aluno.name}</div>
                     <div class="d-flex gap-2 flex-wrap">
-                        <button class="btn btn-sm btn-primary" onclick="abrirEditor('${aluno.id}', '${aluno.name}')">
+                        <button class="btn btn-sm btn-primary" onclick="window.location.href='editar-treino.html?id=${aluno.id}&nome=${encodeURIComponent(aluno.name)}'">
                             <i class="bi bi-journal-text me-1"></i> Treinos
                         </button>
                         <button class="btn btn-sm btn-info text-white" onclick="abrirHistoricoAluno('${aluno.id}', '${aluno.name}')">

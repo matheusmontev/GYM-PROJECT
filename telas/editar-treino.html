@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Treino - Personal</title>
+    <!-- Importação do Bootstrap 5 e Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS Global -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Scripts Globais -->
+    <script type="module" src="../js/app_global.js?v=2"></script>
+    <script type="module" src="../js/editar-treino.js?v=1"></script>
+</head>
+
+<body style="background: #f8fafc;">
+
+    <header class="container mt-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <a href="dashboard.html" class="btn btn-light btn-icon-sm border shadow-sm">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                <div>
+                    <h1 id="pageTitle"
+                        style="font-size: 1.25rem; font-weight: 700; color: var(--text-dark); margin: 0;">Editando
+                        Treino</h1>
+                    <p id="alunoEmEdicao" class="text-primary fw-bold small mb-0">...</p>
+                </div>
+            </div>
+            <button onclick="window.salvarEFechar()" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i> <span class="d-none d-sm-inline">Salvar e</span> Fechar
+            </button>
+        </div>
+    </header>
+
+    <main class="container py-3">
+        <!-- Abas para seleção do dia da semana -->
+        <div class="days-carousel mb-3" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+            <div class="day-tab active" onclick="window.mudarDia('segunda', this)">Seg</div>
+            <div class="day-tab" onclick="window.mudarDia('terca', this)">Ter</div>
+            <div class="day-tab" onclick="window.mudarDia('quarta', this)">Qua</div>
+            <div class="day-tab" onclick="window.mudarDia('quinta', this)">Qui</div>
+            <div class="day-tab" onclick="window.mudarDia('sexta', this)">Sex</div>
+            <div class="day-tab" onclick="window.mudarDia('sabado', this)">Sáb</div>
+            <div class="day-tab" onclick="window.mudarDia('domingo', this)">Dom</div>
+        </div>
+
+        <!-- Container onde os exercícios do dia selecionado serão renderizados -->
+        <div id="containerDias"></div>
+    </main>
+
+    <!-- Modal: Biblioteca de Exercícios -->
+    <div id="modalBiblioteca" class="modal" tabindex="-1">
+        <div class="modal-content" style="max-width: 900px;">
+            <span class="close" onclick="window.fecharBiblioteca()">&times;</span>
+            <h3>Biblioteca de Exercícios</h3>
+            <p class="text-muted small mb-3">Selecione um exercício para importar os dados.</p>
+
+            <div class="mb-3">
+                <input type="text" id="buscaBiblioteca" class="form-control" placeholder="Buscar exercício..."
+                    onkeyup="window.filtrarBiblioteca()">
+            </div>
+
+            <div id="listaBiblioteca"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; max-height: 60vh; overflow-y: auto;">
+                <!-- JS Renderiza Aqui -->
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Operação concluída!</div>
+
+</body>
+
+</html>
