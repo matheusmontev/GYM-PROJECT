@@ -14,7 +14,7 @@
 
     <!-- Scripts Globais -->
     <script type="module" src="../js/app_global.js?v=2"></script>
-    <script type="module" src="../js/editar-treino.js?v=1"></script>
+    <script type="module" src="../js/editar-treino.js?v=3"></script>
 </head>
 
 <body style="background: #f8fafc;">
@@ -56,18 +56,41 @@
 
     <!-- Modal: Biblioteca de Exercícios -->
     <div id="modalBiblioteca" class="modal" tabindex="-1">
-        <div class="modal-content" style="max-width: 900px;">
-            <span class="close" onclick="window.fecharBiblioteca()">&times;</span>
-            <h3>Biblioteca de Exercícios</h3>
-            <p class="text-muted small mb-3">Selecione um exercício para importar os dados.</p>
-
-            <div class="mb-3">
-                <input type="text" id="buscaBiblioteca" class="form-control" placeholder="Buscar exercício..."
-                    onkeyup="window.filtrarBiblioteca()">
+        <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="mb-1">Biblioteca de Exercícios</h3>
+                    <p class="text-muted small mb-0">Clique em um exercício para selecioná-lo.</p>
+                </div>
+                <span class="close" onclick="window.fecharBiblioteca()"
+                    style="font-size: 2rem; cursor: pointer;">&times;</span>
             </div>
 
-            <div id="listaBiblioteca"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; max-height: 60vh; overflow-y: auto;">
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="buscaBiblioteca" class="form-control" placeholder="Buscar exercício..."
+                            onkeyup="window.filtrarBiblioteca()">
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <select id="filtroCategoriaModal" class="form-select" onchange="window.filtrarBiblioteca()">
+                        <option value="">Todas Categorias</option>
+                        <option value="Peito">Peito</option>
+                        <option value="Costas">Costas</option>
+                        <option value="Pernas">Pernas</option>
+                        <option value="Ombros">Ombros</option>
+                        <option value="Braços">Braços</option>
+                        <option value="Abdominais">Abdominais</option>
+                        <option value="Aeróbico">Aeróbico</option>
+                        <option value="Alongamento">Alongamento</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="listaBiblioteca" class="exercise-grid">
                 <!-- JS Renderiza Aqui -->
             </div>
         </div>

@@ -6,8 +6,7 @@ import {
     setDoc,
     getDocs,
     query,
-    where,
-    serverTimestamp
+    where
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 // Proteção: Verifica autenticação
@@ -38,6 +37,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     resetCache();
     await carregarTreino();
     await carregarBiblioteca();
+
+    // Detectar dia da semana atual
+    const diasMap = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+    const hoje = new Date().getDay();
+    diaAtual = diasMap[hoje];
+
+    // Ativar a aba do dia atual
+    document.querySelectorAll('.day-tab').forEach((tab, index) => {
+        tab.classList.remove('active');
+        if (diasSemana[index] === diaAtual) {
+            tab.classList.add('active');
+        }
+    });
+
     renderizarDia();
 });
 
@@ -195,7 +208,8 @@ async function carregarBiblioteca() {
     try {
         const q = query(collection(db, "exercises"), where("trainerId", "==", trainerId));
         const snapshot = await getDocs(q);
-        exerciciosBiblioteca = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        exerciciosBiblioteca = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
     } catch (e) {
         console.error("Erro ao carregar biblioteca:", e);
     }
@@ -221,34 +235,35 @@ function renderizarBiblioteca(lista) {
     }
 
     lista.forEach(ex => {
-        const item = document.createElement('div');
-        item.className = 'biblioteca-item';
-        item.onclick = () => selecionarDaBiblioteca(ex);
+        const card = document.createElement('div');
+        card.className = 'exercise-card';
+        card.style.cursor = 'pointer';
+        card.style.transition = 'all 0.3s ease';
+
+        card.addEventListener('click', () => selecionarDaBiblioteca(ex));
+        card.addEventListener('mouseover', () => {
+            card.style.transform = 'translateY(-4px)';
+            card.style.boxShadow = '0 8px 24px rgba(99, 102, 241, 0.25)';
+        });
+        card.addEventListener('mouseout', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '';
+        });
 
         const imgUrl = ex.urlImagem || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=200&auto=format&fit=crop';
 
-        item.innerHTML = `
-            <div style="position: relative; height: 120px; overflow: hidden;">
-                <div class="category-badge" style="top: 0.5rem; left: 0.5rem; font-size: 0.6rem; padding: 0.2rem 0.5rem; border-radius: 6px;">${ex.categoria}</div>
-                <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
-                ${ex.urlVideo ? '<div class="video-badge" style="width: 24px; height: 24px; bottom: 0.5rem; right: 0.5rem;"><i class="bi bi-play-fill" style="font-size: 0.8rem;"></i></div>' : ''}
+        card.innerHTML = `
+            <div class="card-image-wrapper">
+                <div class="category-badge">${ex.categoria}</div>
+                <img src="${imgUrl}" class="exercise-img" alt="${ex.nome}" loading="lazy">
+                ${ex.urlVideo ? '<div class="video-badge"><i class="bi bi-play-fill"></i></div>' : ''}
             </div>
-            <div style="padding: 1rem;">
-                <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.25rem;">${ex.name || ex.nome}</div>
+            <div class="exercise-info">
+                <div class="exercise-name">${ex.nome}</div>
             </div>
         `;
 
-        const img = item.querySelector('img');
-        item.onmouseover = () => {
-            img.style.transform = 'scale(1.1)';
-            item.style.borderColor = 'var(--primary)';
-        };
-        item.onmouseout = () => {
-            img.style.transform = 'scale(1)';
-            item.style.borderColor = 'var(--border)';
-        };
-
-        container.appendChild(item);
+        container.appendChild(card);
     });
 }
 
@@ -266,8 +281,23 @@ function selecionarDaBiblioteca(ex) {
 
 window.filtrarBiblioteca = function () {
     const busca = document.getElementById('buscaBiblioteca').value.toLowerCase();
-    const filtrados = exerciciosBiblioteca.filter(ex => (ex.nome || ex.name || '').toLowerCase().includes(busca));
+    const categoria = document.getElementById('filtroCategoriaModal').value;
+
+    const filtrados = exerciciosBiblioteca.filter(ex => {
+        const matchesBusca = (ex.nome || '').toLowerCase().includes(busca);
+        const matchesCategoria = !categoria || ex.categoria === categoria;
+        return matchesBusca && matchesCategoria;
+    });
+
     renderizarBiblioteca(filtrados);
+};
+
+// Fechar modal ao clicar fora
+window.onclick = function (event) {
+    const modal = document.getElementById('modalBiblioteca');
+    if (event.target == modal) {
+        fecharBiblioteca();
+    }
 };
 
 // --- UTILITÁRIOS ---
@@ -280,11 +310,3 @@ function showToast(msg, erro = false) {
     toast.className = "show";
     setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
 }
-
-// Fechar modal ao clicar fora
-window.onclick = function (event) {
-    const modal = document.getElementById('modalBiblioteca');
-    if (event.target == modal) {
-        fecharBiblioteca();
-    }
-};
